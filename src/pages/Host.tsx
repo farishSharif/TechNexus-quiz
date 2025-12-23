@@ -37,11 +37,10 @@ export default function Host() {
   const [showAnswer, setShowAnswer] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number>(0);
 
-  // Generate the join URL for QR code
+  // Generate the join URL for QR code (always use current origin to be production-safe)
   const getJoinUrl = () => {
     if (!session) return '';
-    // Use configured public URL when available (set VITE_PUBLIC_URL), otherwise use current origin
-    const baseUrl = (import.meta.env.VITE_PUBLIC_URL as string) || window.location.origin;
+    const baseUrl = window.location.origin;
     // Use /join with PIN for waiting state, /play for active state
     if (session.status === 'waiting') {
       return `${baseUrl}/join?pin=${session.pin_code}`;
@@ -295,7 +294,7 @@ export default function Host() {
             {/* PIN Display - using solid background instead of gradient */}
             <Card className="mb-8 border-2 border-border">
               <CardContent className="py-8">
-                <p className="text-muted-foreground mb-2">Join at <span className="font-bold text-foreground">technexusquiz.app</span> with PIN:</p>
+                <p className="text-muted-foreground mb-2">Join at <span className="font-bold text-foreground">{window.location.host}</span> with PIN:</p>
                 <div className="flex items-center justify-center gap-4 mb-4">
                   <div className="bg-muted/50 px-6 py-3 rounded-xl">
                     <span className="font-display text-5xl md:text-7xl font-bold tracking-wider text-primary">
