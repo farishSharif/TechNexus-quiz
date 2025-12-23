@@ -40,7 +40,8 @@ export default function Host() {
   // Generate the join URL for QR code
   const getJoinUrl = () => {
     if (!session) return '';
-    const baseUrl = window.location.origin;
+    // Use configured public URL when available (set VITE_PUBLIC_URL), otherwise use current origin
+    const baseUrl = (import.meta.env.VITE_PUBLIC_URL as string) || window.location.origin;
     // Use /join with PIN for waiting state, /play for active state
     if (session.status === 'waiting') {
       return `${baseUrl}/join?pin=${session.pin_code}`;

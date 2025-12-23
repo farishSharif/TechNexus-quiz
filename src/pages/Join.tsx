@@ -2,7 +2,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -20,28 +20,48 @@ export default function Join() {
   const [sessionFound, setSessionFound] = useState(!!initialPin);
   const navigate = useNavigate();
 
+  // Auto-run lookup when opened via QR (`?pin=...`)
+  useEffect(() => {
+    if (initialPin) {
+      // run async lookup; ignore result
+      findSessionByPin(initialPin).catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleFindSession = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pinCode.trim()) return;
-    
+    await findSessionByPin(pinCode);
+  };
+
+  // Helper to find a session by PIN and set state; used by form and auto-lookup
+  const findSessionByPin = async (pin: string) => {
+    if (!pin.trim()) return false;
+
     setIsLoading(true);
-    const cleanPin = pinCode.replace(/\s/g, '');
-    
+    const cleanPin = pin.replace(/\s/g, '');
+
     const { data, error } = await supabase
       .from('quiz_sessions')
       .select('id, status')
       .eq('pin_code', cleanPin)
       .maybeSingle();
-    
+
     if (error || !data) {
       toast.error('Quiz not found. Please check the PIN code.');
-    } else if (data.status === 'completed' || data.status === 'cancelled') {
-      toast.error('This quiz session has ended.');
-    } else {
-      setSessionFound(true);
+      setIsLoading(false);
+      return false;
     }
-    
+
+    if (data.status === 'completed' || data.status === 'cancelled') {
+      toast.error('This quiz session has ended.');
+      setIsLoading(false);
+      return false;
+    }
+
+    setSessionFound(true);
     setIsLoading(false);
+    return true;
   };
 
   const handleJoinSession = async (e: React.FormEvent) => {
