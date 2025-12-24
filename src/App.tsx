@@ -14,6 +14,7 @@ import Dashboard from "./pages/Dashboard";
 import Host from "./pages/Host";
 import Play from "./pages/Play";
 import Admin from "./pages/Admin";
+import QuizDetail from "./pages/QuizDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/host/:sessionId" element={<Host />} />
             <Route path="/play/:sessionId" element={<Play />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/quiz/:quizId" element={<QuizDetail />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
