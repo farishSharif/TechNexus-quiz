@@ -20,11 +20,13 @@ export default function Play() {
   const [participants, setParticipants] = useState<QuizParticipant[]>([]);
   const [loading, setLoading] = useState(true);
   
-  const [timeLeft, setTimeLeft] = useState(30);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [selectedAnswers, setSelectedAnswers] = useState<string[]>([]);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [lastResult, setLastResult] = useState<{ correct: boolean; points: number } | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentQuestionId, setCurrentQuestionId] = useState<string | null>(null);
 
   const participantId = localStorage.getItem('participantId');
 
@@ -63,12 +65,12 @@ export default function Play() {
     navigate(`/join?pin=${sessionData.pin_code}`);
   };
 
+  // Timer effect - only runs when timeLeft is set and not answered
   useEffect(() => {
-    if (session?.status === 'active' && !hasAnswered && timeLeft > 0) {
+    if (session?.status === 'active' && !hasAnswered && timeLeft !== null && timeLeft > 0) {
       const timer = setInterval(() => {
         setTimeLeft(prev => {
-          if (prev <= 1) {
-            handleTimeUp();
+          if (prev === null || prev <= 1) {
             return 0;
           }
           return prev - 1;
@@ -76,7 +78,33 @@ export default function Play() {
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [session?.status, session?.current_question_index, hasAnswered, timeLeft]);
+  }, [session?.status, hasAnswered, timeLeft]);
+
+  // Handle time up separately to avoid closure issues
+  useEffect(() => {
+    if (timeLeft === 0 && !hasAnswered && !isSubmitting) {
+      handleTimeUp();
+    }
+  }, [timeLeft, hasAnswered, isSubmitting]);
+
+  // Initialize timer when session becomes active or question changes
+  useEffect(() => {
+    if (session?.status === 'active' && questions.length > 0) {
+      const questionIndex = session.current_question_index || 0;
+      const question = questions[questionIndex];
+      
+      if (question && question.id !== currentQuestionId) {
+        // Reset all question state
+        setSelectedAnswers([]);
+        setHasAnswered(false);
+        setShowResult(false);
+        setLastResult(null);
+        setIsSubmitting(false);
+        setCurrentQuestionId(question.id);
+        setTimeLeft(question.time_limit || 30);
+      }
+    }
+  }, [session?.status, session?.current_question_index, questions, currentQuestionId]);
 
   const fetchData = async () => {
     // Fetch session
@@ -141,31 +169,8 @@ export default function Play() {
         },
         (payload) => {
           const newSession = payload.new as QuizSession;
-          
-          // Reset state for new question when question index changes
-          setSession(prevSession => {
-            if (newSession.current_question_index !== prevSession?.current_question_index) {
-              // Use functional updates to avoid stale closure issues
-              setSelectedAnswers([]);
-              setHasAnswered(false);
-              setShowResult(false);
-              setLastResult(null);
-              
-              // Need to update questions state to get correct time limit
-              supabase
-                .from('questions')
-                .select('*')
-                .eq('quiz_id', newSession.quiz_id)
-                .order('order_index')
-                .then(({ data }) => {
-                  if (data) {
-                    const newQuestion = data[newSession.current_question_index || 0];
-                    setTimeLeft(newQuestion?.time_limit || 30);
-                  }
-                });
-            }
-            return newSession;
-          });
+          // Just update the session - the useEffect will handle state reset
+          setSession(newSession);
         }
       )
       .on(
@@ -219,10 +224,18 @@ export default function Play() {
   };
 
   const submitAnswer = async (answers: string[] = selectedAnswers) => {
-    if (!session || !participant) return;
+    // Prevent double submission
+    if (!session || !participant || isSubmitting || hasAnswered) return;
     
+    setIsSubmitting(true);
     setHasAnswered(true);
+    
     const currentQuestion = questions[session.current_question_index || 0];
+    if (!currentQuestion) {
+      setIsSubmitting(false);
+      return;
+    }
+    
     const correctAnswers = currentQuestion.correct_answers as string[];
     
     // Check if answer is correct
@@ -231,49 +244,52 @@ export default function Play() {
       answers.every(a => correctAnswers.includes(a));
     
     // Calculate points based on reaction time
-    // Faster = more points (up to 2x base points for instant answers)
     const basePoints = currentQuestion.points;
-    const timeRatio = timeLeft / currentQuestion.time_limit; // 1.0 = instant, 0 = time ran out
+    const currentTimeLeft = timeLeft ?? 0;
+    const timeRatio = currentTimeLeft / currentQuestion.time_limit;
     
-    // Points formula: base + (base * timeRatio) = up to 2x points for fastest answers
-    // Minimum 50% of base points if answered correctly but slowly
-    const reactionMultiplier = 0.5 + (timeRatio * 1.5); // Range: 0.5x to 2.0x
+    // Points formula: 0.5x to 2.0x multiplier based on speed
+    const reactionMultiplier = 0.5 + (timeRatio * 1.5);
     const pointsEarned = isCorrect ? Math.floor(basePoints * reactionMultiplier) : 0;
 
-    // Save response
-    await supabase
-      .from('quiz_responses')
-      .insert({
-        participant_id: participant.id,
-        question_id: currentQuestion.id,
-        session_id: session.id,
-        selected_answers: answers,
-        is_correct: isCorrect,
-        points_earned: pointsEarned,
-        response_time_ms: (currentQuestion.time_limit - timeLeft) * 1000
+    try {
+      // Save response
+      await supabase
+        .from('quiz_responses')
+        .insert({
+          participant_id: participant.id,
+          question_id: currentQuestion.id,
+          session_id: session.id,
+          selected_answers: answers,
+          is_correct: isCorrect,
+          points_earned: pointsEarned,
+          response_time_ms: (currentQuestion.time_limit - currentTimeLeft) * 1000
+        });
+
+      // Update participant score
+      const newScore = participant.total_score + pointsEarned;
+      const newStreak = isCorrect ? (participant.current_streak + 1) : 0;
+      
+      await supabase
+        .from('quiz_participants')
+        .update({ 
+          total_score: newScore,
+          current_streak: newStreak,
+          best_streak: Math.max(newStreak, participant.best_streak)
+        })
+        .eq('id', participant.id);
+
+      setParticipant({
+        ...participant,
+        total_score: newScore,
+        current_streak: newStreak
       });
 
-    // Update participant score
-    const newScore = participant.total_score + pointsEarned;
-    const newStreak = isCorrect ? (participant.current_streak + 1) : 0;
-    
-    await supabase
-      .from('quiz_participants')
-      .update({ 
-        total_score: newScore,
-        current_streak: newStreak,
-        best_streak: Math.max(newStreak, participant.best_streak)
-      })
-      .eq('id', participant.id);
-
-    setParticipant({
-      ...participant,
-      total_score: newScore,
-      current_streak: newStreak
-    });
-
-    setLastResult({ correct: isCorrect, points: pointsEarned });
-    setShowResult(true);
+      setLastResult({ correct: isCorrect, points: pointsEarned });
+      setShowResult(true);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -345,12 +361,12 @@ export default function Play() {
                 <Badge variant="outline">
                   Question {(session.current_question_index || 0) + 1} / {questions.length}
                 </Badge>
-                <div className={`flex items-center gap-2 font-bold ${timeLeft <= 5 ? 'text-destructive timer-urgent' : ''}`}>
+                <div className={`flex items-center gap-2 font-bold ${(timeLeft ?? 0) <= 5 ? 'text-destructive timer-urgent' : ''}`}>
                   <Clock className="h-5 w-5" />
-                  {timeLeft}s
+                  {timeLeft ?? 0}s
                 </div>
               </div>
-              <Progress value={(timeLeft / (currentQuestion.time_limit || 30)) * 100} className="h-2" />
+              <Progress value={((timeLeft ?? 0) / (currentQuestion.time_limit || 30)) * 100} className="h-2" />
             </div>
 
             {/* Question */}
