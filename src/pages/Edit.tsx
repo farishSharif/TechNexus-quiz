@@ -12,7 +12,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { QuizCategory, QuestionType, CATEGORY_LABELS, CATEGORY_ICONS } from '@/types/quiz';
-import { Plus, Trash2, GripVertical, Save, Loader2, ArrowLeft } from 'lucide-react';
+import { Plus, Save, Loader2, ArrowLeft } from 'lucide-react';
+import { QuestionEditor } from '@/components/quiz/QuestionEditor';
 
 interface QuestionForm {
   id: string;
@@ -243,30 +244,30 @@ export default function Edit() {
 
   return (
     <MainLayout hideFooter>
-      <div className="container py-6 max-w-4xl">
+      <div className="container py-4 sm:py-6 max-w-4xl px-3 sm:px-4">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between mb-4 sm:mb-6 gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <Link to="/dashboard">
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="shrink-0">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
-            <h1 className="font-display text-2xl font-bold">Edit Quiz</h1>
+            <h1 className="font-display text-xl sm:text-2xl font-bold truncate">Edit Quiz</h1>
           </div>
-          <Button onClick={handleSave} disabled={saving} className="gradient-primary border-0">
-            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-            Save Changes
+          <Button onClick={handleSave} disabled={saving} className="gradient-primary border-0 shrink-0">
+            {saving ? <Loader2 className="h-4 w-4 animate-spin sm:mr-2" /> : <Save className="h-4 w-4 sm:mr-2" />}
+            <span className="hidden sm:inline">Save Changes</span>
           </Button>
         </div>
 
         {/* Quiz Details */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Quiz Details</CardTitle>
+        <Card className="mb-4 sm:mb-6">
+          <CardHeader className="pb-3 sm:pb-6">
+            <CardTitle className="text-lg sm:text-xl">Quiz Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="title">Title</Label>
                 <Input
@@ -274,12 +275,13 @@ export default function Edit() {
                   placeholder="Enter quiz title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
+                  className="h-10"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="category">Category</Label>
                 <Select value={category} onValueChange={(v) => setCategory(v as QuizCategory)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -304,15 +306,15 @@ export default function Edit() {
               />
             </div>
 
-            <div className="flex flex-wrap items-center gap-6">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-4 sm:gap-6">
               <div className="flex items-center gap-2">
                 <Switch checked={isPublic} onCheckedChange={setIsPublic} />
                 <Label>Make quiz public</Label>
               </div>
               <div className="flex items-center gap-2">
-                <Label>Default time:</Label>
+                <Label className="whitespace-nowrap">Default time:</Label>
                 <Select value={defaultTime.toString()} onValueChange={(v) => handleDefaultTimeChange(parseInt(v))}>
-                  <SelectTrigger className="w-24">
+                  <SelectTrigger className="w-24 h-10">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -328,130 +330,28 @@ export default function Edit() {
 
         {/* Questions */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-display text-xl font-bold">Questions ({questions.length})</h2>
-            <Button onClick={addQuestion} variant="outline">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Question
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="font-display text-lg sm:text-xl font-bold">Questions ({questions.length})</h2>
+            <Button onClick={addQuestion} variant="outline" size="sm" className="sm:size-default">
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Add Question</span>
+
             </Button>
           </div>
-
           {questions.map((question, qIndex) => (
-            <Card key={question.id} className="relative">
-              <CardContent className="pt-6">
-                <div className="flex items-start gap-3">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <GripVertical className="h-5 w-5" />
-                    <span className="font-bold text-lg">{qIndex + 1}</span>
-                  </div>
-                  
-                  <div className="flex-1 space-y-4">
-                    <div className="flex gap-4">
-                      <div className="flex-1">
-                        <Input
-                          placeholder="Enter your question"
-                          value={question.question_text}
-                          onChange={(e) => updateQuestion(question.id, { question_text: e.target.value })}
-                          className="text-lg font-medium"
-                        />
-                      </div>
-                      <Select
-                        value={question.question_type}
-                        onValueChange={(v) => updateQuestion(question.id, { 
-                          question_type: v as QuestionType,
-                          correct_answers: [],
-                          options: v === 'true_false' ? ['True', 'False'] : question.options
-                        })}
-                      >
-                        <SelectTrigger className="w-48">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="multiple_choice_single">Single Choice</SelectItem>
-                          <SelectItem value="multiple_choice_multiple">Multiple Choice</SelectItem>
-                          <SelectItem value="true_false">True/False</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Options */}
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      {question.options.map((option, oIndex) => (
-                        <div key={oIndex} className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => toggleCorrectAnswer(question.id, oIndex)}
-                            className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center text-sm font-bold transition-colors ${
-                              question.correct_answers.includes(option) && option
-                                ? 'bg-success text-success-foreground border-success'
-                                : 'border-border hover:border-primary'
-                            }`}
-                          >
-                            {String.fromCharCode(65 + oIndex)}
-                          </button>
-                          <Input
-                            placeholder={`Option ${String.fromCharCode(65 + oIndex)}`}
-                            value={option}
-                            onChange={(e) => updateOption(question.id, oIndex, e.target.value)}
-                            disabled={question.question_type === 'true_false'}
-                            className="flex-1"
-                          />
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Question Settings */}
-                    <div className="flex items-center gap-4 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Label className="text-muted-foreground">Time:</Label>
-                        <Select 
-                          value={question.time_limit.toString()} 
-                          onValueChange={(v) => updateQuestion(question.id, { time_limit: parseInt(v) })}
-                        >
-                          <SelectTrigger className="w-20 h-8">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {[5, 10, 15, 20, 30, 45, 60].map(t => (
-                              <SelectItem key={t} value={t.toString()}>{t}s</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Label className="text-muted-foreground">Points:</Label>
-                        <Select 
-                          value={question.points.toString()} 
-                          onValueChange={(v) => updateQuestion(question.id, { points: parseInt(v) })}
-                        >
-                          <SelectTrigger className="w-24 h-8">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {[50, 100, 150, 200, 500, 1000].map(p => (
-                              <SelectItem key={p} value={p.toString()}>{p} pts</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </div>
-
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeQuestion(question.id)}
-                    disabled={questions.length === 1}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <QuestionEditor
+              key={question.id}
+              question={question}
+              index={qIndex}
+              onUpdate={updateQuestion}
+              onUpdateOption={updateOption}
+              onToggleCorrectAnswer={toggleCorrectAnswer}
+              onRemove={removeQuestion}
+              canRemove={questions.length > 1}
+            />
           ))}
 
-          <Button onClick={addQuestion} variant="outline" className="w-full h-14 border-dashed">
+          <Button onClick={addQuestion} variant="outline" className="w-full h-12 sm:h-14 border-dashed">
             <Plus className="h-5 w-5 mr-2" />
             Add Another Question
           </Button>

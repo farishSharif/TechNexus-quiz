@@ -2,12 +2,13 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Play, QrCode, Loader2 } from 'lucide-react';
 import { AVATAR_EMOJIS } from '@/types/quiz';
+import { QRScanner } from '@/components/quiz/QRScanner';
 
 export default function Join() {
   const [searchParams] = useSearchParams();
@@ -20,48 +21,28 @@ export default function Join() {
   const [sessionFound, setSessionFound] = useState(!!initialPin);
   const navigate = useNavigate();
 
-  // Auto-run lookup when opened via QR (`?pin=...`)
-  useEffect(() => {
-    if (initialPin) {
-      // run async lookup; ignore result
-      findSessionByPin(initialPin).catch(() => {});
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const handleFindSession = async (e: React.FormEvent) => {
     e.preventDefault();
-    await findSessionByPin(pinCode);
-  };
-
-  // Helper to find a session by PIN and set state; used by form and auto-lookup
-  const findSessionByPin = async (pin: string) => {
-    if (!pin.trim()) return false;
-
+    if (!pinCode.trim()) return;
+    
     setIsLoading(true);
-    const cleanPin = pin.replace(/\s/g, '');
-
+    const cleanPin = pinCode.replace(/\s/g, '');
+    
     const { data, error } = await supabase
       .from('quiz_sessions')
       .select('id, status')
       .eq('pin_code', cleanPin)
       .maybeSingle();
-
+    
     if (error || !data) {
       toast.error('Quiz not found. Please check the PIN code.');
-      setIsLoading(false);
-      return false;
-    }
-
-    if (data.status === 'completed' || data.status === 'cancelled') {
+    } else if (data.status === 'completed' || data.status === 'cancelled') {
       toast.error('This quiz session has ended.');
-      setIsLoading(false);
-      return false;
+    } else {
+      setSessionFound(true);
     }
-
-    setSessionFound(true);
+    
     setIsLoading(false);
-    return true;
   };
 
   const handleJoinSession = async (e: React.FormEvent) => {
@@ -106,9 +87,37 @@ export default function Join() {
     setIsLoading(false);
   };
 
+  const handleQRScan = (scannedPin: string) => {
+    setPinCode(scannedPin);
+    // Auto-verify the session
+    verifySession(scannedPin);
+  };
+
+  const verifySession = async (pin: string) => {
+    setIsLoading(true);
+    const cleanPin = pin.replace(/\s/g, '');
+    
+    const { data, error } = await supabase
+      .from('quiz_sessions')
+      .select('id, status')
+      .eq('pin_code', cleanPin)
+      .maybeSingle();
+    
+    if (error || !data) {
+      toast.error('Quiz not found. Please check the PIN code.');
+    } else if (data.status === 'completed' || data.status === 'cancelled') {
+      toast.error('This quiz session has ended.');
+    } else {
+      setSessionFound(true);
+      toast.success('Quiz found! Enter your nickname to join.');
+    }
+    
+    setIsLoading(false);
+  };
+
   return (
     <MainLayout>
-      <div className="container flex items-center justify-center min-h-[calc(100vh-10rem)] py-12">
+      <div className="container flex items-center justify-center min-h-[calc(100vh-10rem)] py-12 px-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-primary/15 flex items-center justify-center">
@@ -116,7 +125,7 @@ export default function Join() {
             </div>
             <CardTitle className="font-display text-2xl">Join a Quiz</CardTitle>
             <CardDescription>
-              {sessionFound ? 'Choose your nickname and avatar' : 'Enter the quiz PIN to get started'}
+              {sessionFound ? 'Choose your nickname and avatar' : 'Enter the quiz PIN or scan QR code'}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -130,10 +139,13 @@ export default function Join() {
                   className="text-center text-2xl font-bold h-14 tracking-widest"
                   maxLength={7}
                 />
-                <Button type="submit" className="w-full gradient-primary border-0 h-12" disabled={isLoading}>
-                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Play className="h-4 w-4 mr-2" />}
-                  Find Quiz
-                </Button>
+                <div className="flex gap-2">
+                  <Button type="submit" className="flex-1 gradient-primary border-0 h-12" disabled={isLoading}>
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Play className="h-4 w-4 mr-2" />}
+                    Find Quiz
+                  </Button>
+                  <QRScanner onScan={handleQRScan} />
+                </div>
               </form>
             ) : (
               <form onSubmit={handleJoinSession} className="space-y-6">
