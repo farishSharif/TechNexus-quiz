@@ -378,57 +378,15 @@ export default function Play() {
               </CardContent>
             </Card>
 
-            {/* Show result and leaderboard after answering */}
+            {/* Show waiting message or answer options */}
             {hasAnswered ? (
-              <div className="space-y-4">
-                {/* Result Card */}
-                <Card className={`border-2 ${lastResult?.correct ? 'border-green-500 bg-green-500/10' : 'border-destructive bg-destructive/10'}`}>
-                  <CardContent className="py-6 text-center">
-                    <div className="text-5xl mb-3">
-                      {lastResult?.correct ? <CheckCircle className="h-16 w-16 mx-auto text-green-500" /> : <XCircle className="h-16 w-16 mx-auto text-destructive" />}
-                    </div>
-                    <h3 className={`font-display text-2xl font-bold mb-1 ${lastResult?.correct ? 'text-green-600' : 'text-destructive'}`}>
-                      {lastResult?.correct ? 'Correct!' : 'Incorrect'}
-                    </h3>
-                    {lastResult?.correct && (
-                      <p className="text-lg font-semibold text-green-600">+{lastResult.points} points</p>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Live Leaderboard */}
-                <Card>
-                  <CardContent className="py-4">
-                    <h3 className="font-display font-bold mb-3 flex items-center gap-2 text-center justify-center">
-                      <Trophy className="h-5 w-5 text-secondary" />
-                      Live Standings
-                    </h3>
-                    <div className="space-y-2 max-h-[280px] overflow-y-auto">
-                      {participants.slice(0, 10).map((p, index) => (
-                        <div 
-                          key={p.id}
-                          className={`flex items-center justify-between p-2.5 rounded-lg transition-all ${
-                            p.id === participant.id 
-                              ? 'bg-primary/15 border-2 border-primary scale-[1.02]' 
-                              : 'bg-muted/50'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold w-6 text-center">
-                              {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`}
-                            </span>
-                            <span className="text-sm">{p.avatar_emoji} {p.nickname}</span>
-                          </div>
-                          <span className="font-bold text-sm">{p.total_score} pts</span>
-                        </div>
-                      ))}
-                    </div>
-                    <p className="text-xs text-muted-foreground text-center mt-3">
-                      Waiting for next question...
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
+              <Card className="border-2 border-primary/30 bg-primary/5">
+                <CardContent className="py-8 text-center">
+                  <div className="text-4xl mb-4">⏳</div>
+                  <h3 className="font-display text-2xl font-bold mb-2">Answer Submitted!</h3>
+                  <p className="text-muted-foreground">Waiting for next question...</p>
+                </CardContent>
+              </Card>
             ) : (
               <>
                 {/* Answer Options */}
