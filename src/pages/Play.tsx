@@ -243,14 +243,16 @@ export default function Play() {
       answers.length === correctAnswers.length &&
       answers.every(a => correctAnswers.includes(a));
     
-    // Calculate points based on reaction time
-    const basePoints = currentQuestion.points;
-    const currentTimeLeft = timeLeft ?? 0;
-    const timeRatio = currentTimeLeft / currentQuestion.time_limit;
-    
-    // Points formula: 0.5x to 2.0x multiplier based on speed
-    const reactionMultiplier = 0.5 + (timeRatio * 1.5);
+    // Calculate points based on reaction time (use safe fallbacks)
+    const timeLimit = (currentQuestion.time_limit && currentQuestion.time_limit > 0) ? currentQuestion.time_limit : 30;
+    const currentTimeLeft = typeof timeLeft === 'number' ? timeLeft : timeLimit;
+    const timeRatio = timeLimit > 0 ? (currentTimeLeft / timeLimit) : 0;
+
+    // Points formula: 0.5x to 2.0x multiplier based on speed (clamped)
+    const reactionMultiplier = Math.min(2, Math.max(0.5, 0.5 + (timeRatio * 1.5)));
+    const basePoints = typeof currentQuestion.points === 'number' ? currentQuestion.points : 0;
     const pointsEarned = isCorrect ? Math.floor(basePoints * reactionMultiplier) : 0;
+    const responseTimeMs = Math.max(0, (timeLimit - currentTimeLeft) * 1000);
 
     try {
       // Save response
@@ -263,19 +265,19 @@ export default function Play() {
           selected_answers: answers,
           is_correct: isCorrect,
           points_earned: pointsEarned,
-          response_time_ms: (currentQuestion.time_limit - currentTimeLeft) * 1000
+          response_time_ms: responseTimeMs
         });
 
       // Update participant score
-      const newScore = participant.total_score + pointsEarned;
-      const newStreak = isCorrect ? (participant.current_streak + 1) : 0;
+      const newScore = (participant.total_score || 0) + pointsEarned;
+      const newStreak = isCorrect ? ((participant.current_streak || 0) + 1) : 0;
       
       await supabase
         .from('quiz_participants')
-        .update({ 
+        .update({
           total_score: newScore,
           current_streak: newStreak,
-          best_streak: Math.max(newStreak, participant.best_streak)
+          best_streak: Math.max(newStreak, (participant.best_streak || 0))
         })
         .eq('id', participant.id);
 
@@ -375,6 +377,61 @@ export default function Play() {
                 <h2 className="font-display text-lg sm:text-xl md:text-2xl font-bold text-center break-words whitespace-pre-wrap overflow-hidden">
                   {currentQuestion.question_text}
                 </h2>
+              </CardContent>
+            </Card>
+
+            {/* Leaderboard below question (top 10 + always show user) */}
+            <Card className="mb-6">
+              <CardContent className="py-4">
+                <h3 className="font-display font-bold mb-2 flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-secondary" />
+                  Leaderboard
+                </h3>
+                <div className="space-y-2">
+                  {(() => {
+                    // Sort participants by score descending
+                    const sorted = [...participants].sort((a, b) => (b.total_score || 0) - (a.total_score || 0));
+                    // Find current user's rank (1-based)
+                    const userIndex = sorted.findIndex(p => p.id === participant.id);
+                    // Top 10
+                    const top10 = sorted.slice(0, 10);
+                    // If user not in top 10, show their row after a separator
+                    return (
+                      <>
+                        {top10.map((p, index) => (
+                          <div
+                            key={p.id}
+                            className={`flex items-center justify-between p-2 rounded-lg ${
+                              p.id === participant.id ? 'bg-primary/10 border border-primary' : 'bg-muted/50'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="font-bold w-6">
+                                {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`}
+                              </span>
+                              <span>{p.avatar_emoji} {p.nickname}</span>
+                            </div>
+                            <span className="font-bold">{p.total_score} pts</span>
+                          </div>
+                        ))}
+                        {userIndex >= 10 && (
+                          <>
+                            <div className="border-t border-border my-2" />
+                            <div
+                              className="flex items-center justify-between p-2 rounded-lg bg-primary/10 border border-primary"
+                            >
+                              <div className="flex items-center gap-3">
+                                <span className="font-bold w-6">{userIndex + 1}.</span>
+                                <span>{participant.avatar_emoji} {participant.nickname}</span>
+                              </div>
+                              <span className="font-bold">{participant.total_score} pts</span>
+                            </div>
+                          </>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
               </CardContent>
             </Card>
 
