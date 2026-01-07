@@ -266,15 +266,13 @@ export default function Play() {
 
       // Update participant score
       const newScore = participant.total_score + pointsEarned;
-      const newStreak = isCorrect ? (participant.current_streak + 1) : 0;
-      
+      const newStreak = isCorrect ? ((participant.current_streak || 0) + 1) : 0;      
       await supabase
         .from('quiz_participants')
         .update({ 
           total_score: newScore,
           current_streak: newStreak,
-          best_streak: Math.max(newStreak, participant.best_streak)
-        })
+          best_streak: Math.max(newStreak, (participant.best_streak || 0))        })
         .eq('id', participant.id);
 
       setParticipant({
@@ -381,7 +379,6 @@ export default function Play() {
                 {/* Answer Submitted Card - No feedback shown */}
                 <Card className="border-2 border-primary/50 bg-primary/5">
                   <CardContent className="py-6 text-center">
-                    <div className="text-5xl mb-3">✅</div>
                     <h3 className="font-display text-2xl font-bold mb-1 text-primary">
                       Answer Submitted!
                     </h3>
