@@ -54,9 +54,9 @@ export default function Index() {
             </form>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-slide-up stagger-3">
-              <Link to="/browse">
+              <Link to="/dashboard">
                 <Button variant="outline" size="lg" className="btn-bounce">
-                  Browse Quizzes
+                  Dashboard
                 </Button>
               </Link>
               <Link to="/create">
