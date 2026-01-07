@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { QuizSession, Quiz, Question, QuizParticipant } from '@/types/quiz';
 import { toast } from 'sonner';
-import { Loader2, Trophy, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Loader2, Trophy, Clock } from 'lucide-react';
 
 export default function Play() {
   const { sessionId } = useParams();
@@ -24,7 +24,6 @@ export default function Play() {
   const [selectedAnswers, setSelectedAnswers] = useState<string[]>([]);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [showResult, setShowResult] = useState(false);
-  const [lastResult, setLastResult] = useState<{ correct: boolean; points: number } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentQuestionId, setCurrentQuestionId] = useState<string | null>(null);
 
@@ -98,7 +97,6 @@ export default function Play() {
         setSelectedAnswers([]);
         setHasAnswered(false);
         setShowResult(false);
-        setLastResult(null);
         setIsSubmitting(false);
         setCurrentQuestionId(question.id);
         setTimeLeft(question.time_limit || 30);
@@ -243,16 +241,14 @@ export default function Play() {
       answers.length === correctAnswers.length &&
       answers.every(a => correctAnswers.includes(a));
     
-    // Calculate points based on reaction time (use safe fallbacks)
-    const timeLimit = (currentQuestion.time_limit && currentQuestion.time_limit > 0) ? currentQuestion.time_limit : 30;
-    const currentTimeLeft = typeof timeLeft === 'number' ? timeLeft : timeLimit;
-    const timeRatio = timeLimit > 0 ? (currentTimeLeft / timeLimit) : 0;
-
-    // Points formula: 0.5x to 2.0x multiplier based on speed (clamped)
-    const reactionMultiplier = Math.min(2, Math.max(0.5, 0.5 + (timeRatio * 1.5)));
-    const basePoints = typeof currentQuestion.points === 'number' ? currentQuestion.points : 0;
+    // Calculate points based on reaction time
+    const basePoints = currentQuestion.points;
+    const currentTimeLeft = timeLeft ?? 0;
+    const timeRatio = currentTimeLeft / currentQuestion.time_limit;
+    
+    // Points formula: 0.5x to 2.0x multiplier based on speed
+    const reactionMultiplier = 0.5 + (timeRatio * 1.5);
     const pointsEarned = isCorrect ? Math.floor(basePoints * reactionMultiplier) : 0;
-    const responseTimeMs = Math.max(0, (timeLimit - currentTimeLeft) * 1000);
 
     try {
       // Save response
@@ -265,16 +261,16 @@ export default function Play() {
           selected_answers: answers,
           is_correct: isCorrect,
           points_earned: pointsEarned,
-          response_time_ms: responseTimeMs
+          response_time_ms: (currentQuestion.time_limit - currentTimeLeft) * 1000
         });
 
       // Update participant score
-      const newScore = (participant.total_score || 0) + pointsEarned;
-      const newStreak = isCorrect ? ((participant.current_streak || 0) + 1) : 0;
+      const newScore = participant.total_score + pointsEarned;
+      const newStreak = isCorrect ? (participant.current_streak + 1) : 0;
       
       await supabase
         .from('quiz_participants')
-        .update({
+        .update({ 
           total_score: newScore,
           current_streak: newStreak,
           best_streak: Math.max(newStreak, participant.best_streak)
@@ -287,7 +283,6 @@ export default function Play() {
         current_streak: newStreak
       });
 
-      setLastResult({ correct: isCorrect, points: pointsEarned });
       setShowResult(true);
     } finally {
       setIsSubmitting(false);
@@ -380,15 +375,55 @@ export default function Play() {
               </CardContent>
             </Card>
 
-            {/* Show waiting message or answer options */}
+            {/* Show leaderboard after answering - no correct/wrong feedback */}
             {hasAnswered ? (
-              <Card className="border-2 border-primary/30 bg-primary/5">
-                <CardContent className="py-8 text-center">
-                  <div className="text-4xl mb-4">⏳</div>
-                  <h3 className="font-display text-2xl font-bold mb-2">Answer Submitted!</h3>
-                  <p className="text-muted-foreground">Waiting for next question...</p>
-                </CardContent>
-              </Card>
+              <div className="space-y-4">
+                {/* Answer Submitted Card - No feedback shown */}
+                <Card className="border-2 border-primary/50 bg-primary/5">
+                  <CardContent className="py-6 text-center">
+                    <div className="text-5xl mb-3">✅</div>
+                    <h3 className="font-display text-2xl font-bold mb-1 text-primary">
+                      Answer Submitted!
+                    </h3>
+                    <p className="text-muted-foreground">
+                      Waiting for the question to end...
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {/* Live Leaderboard */}
+                <Card>
+                  <CardContent className="py-4">
+                    <h3 className="font-display font-bold mb-3 flex items-center gap-2 text-center justify-center">
+                      <Trophy className="h-5 w-5 text-secondary" />
+                      Live Standings
+                    </h3>
+                    <div className="space-y-2 max-h-[280px] overflow-y-auto">
+                      {participants.slice(0, 10).map((p, index) => (
+                        <div 
+                          key={p.id}
+                          className={`flex items-center justify-between p-2.5 rounded-lg transition-all ${
+                            p.id === participant.id 
+                              ? 'bg-primary/15 border-2 border-primary scale-[1.02]' 
+                              : 'bg-muted/50'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold w-6 text-center">
+                              {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`}
+                            </span>
+                            <span className="text-sm">{p.avatar_emoji} {p.nickname}</span>
+                          </div>
+                          <span className="font-bold text-sm">{p.total_score} pts</span>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground text-center mt-3">
+                      Waiting for next question...
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
             ) : (
               <>
                 {/* Answer Options */}
