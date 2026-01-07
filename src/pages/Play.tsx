@@ -389,35 +389,57 @@ export default function Play() {
                 </Card>
 
                 {/* Live Leaderboard */}
-                <Card>
+                <Card className="mb-6">
                   <CardContent className="py-4">
-                    <h3 className="font-display font-bold mb-3 flex items-center gap-2 text-center justify-center">
+                    <h3 className="font-display font-bold mb-2 flex items-center gap-2">
                       <Trophy className="h-5 w-5 text-secondary" />
-                      Live Standings
+                      Leaderboard
                     </h3>
-                    <div className="space-y-2 max-h-[280px] overflow-y-auto">
-                      {participants.slice(0, 10).map((p, index) => (
-                        <div 
-                          key={p.id}
-                          className={`flex items-center justify-between p-2.5 rounded-lg transition-all ${
-                            p.id === participant.id 
-                              ? 'bg-primary/15 border-2 border-primary scale-[1.02]' 
-                              : 'bg-muted/50'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold w-6 text-center">
-                              {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`}
-                            </span>
-                            <span className="text-sm">{p.avatar_emoji} {p.nickname}</span>
-                          </div>
-                          <span className="font-bold text-sm">{p.total_score} pts</span>
-                        </div>
-                      ))}
+                    <div className="space-y-2">
+                      {(() => {
+                        // Sort participants by score descending
+                        const sorted = [...participants].sort((a, b) => (b.total_score || 0) - (a.total_score || 0));
+                        // Find current user's rank (1-based)
+                        const userIndex = sorted.findIndex(p => p.id === participant.id);
+                        // Top 10
+                        const top10 = sorted.slice(0, 10);
+                        // If user not in top 10, show their row after a separator
+                        return (
+                          <>
+                            {top10.map((p, index) => (
+                              <div
+                                key={p.id}
+                                className={`flex items-center justify-between p-2 rounded-lg ${
+                                  p.id === participant.id ? 'bg-primary/10 border border-primary' : 'bg-muted/50'
+                                }`}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <span className="font-bold w-6">
+                                    {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`}
+                                  </span>
+                                  <span>{p.avatar_emoji} {p.nickname}</span>
+                                </div>
+                                <span className="font-bold">{p.total_score} pts</span>
+                              </div>
+                            ))}
+                            {userIndex >= 10 && (
+                              <>
+                                <div className="border-t border-border my-2" />
+                                <div
+                                  className="flex items-center justify-between p-2 rounded-lg bg-primary/10 border border-primary"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <span className="font-bold w-6">{userIndex + 1}.</span>
+                                    <span>{participant.avatar_emoji} {participant.nickname}</span>
+                                  </div>
+                                  <span className="font-bold">{participant.total_score} pts</span>
+                                </div>
+                              </>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
-                    <p className="text-xs text-muted-foreground text-center mt-3">
-                      Waiting for next question...
-                    </p>
                   </CardContent>
                 </Card>
               </div>
