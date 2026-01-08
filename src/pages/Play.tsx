@@ -224,28 +224,28 @@ export default function Play() {
   const submitAnswer = async (answers: string[] = selectedAnswers) => {
     // Prevent double submission
     if (!session || !participant || isSubmitting || hasAnswered) return;
-
+    
     setIsSubmitting(true);
     setHasAnswered(true);
-
+    
     const currentQuestion = questions[session.current_question_index || 0];
     if (!currentQuestion) {
       setIsSubmitting(false);
       return;
     }
-
+    
     const correctAnswers = currentQuestion.correct_answers as string[];
-
+    
     // Check if answer is correct
-    const isCorrect = answers.length > 0 &&
+    const isCorrect = answers.length > 0 && 
       answers.length === correctAnswers.length &&
       answers.every(a => correctAnswers.includes(a));
-
+    
     // Calculate points based on reaction time
     const basePoints = currentQuestion.points;
     const currentTimeLeft = timeLeft ?? 0;
     const timeRatio = currentTimeLeft / currentQuestion.time_limit;
-
+    
     // Points formula: 0.5x to 2.0x multiplier based on speed
     const reactionMultiplier = 0.5 + (timeRatio * 1.5);
     const pointsEarned = isCorrect ? Math.floor(basePoints * reactionMultiplier) : 0;
@@ -264,26 +264,21 @@ export default function Play() {
           response_time_ms: (currentQuestion.time_limit - currentTimeLeft) * 1000
         });
 
-      // Update participant score in DB
-      // Use functional update to avoid stale state
-      setParticipant(prev => {
-        if (!prev) return prev;
-        const newScore = prev.total_score + pointsEarned;
-        const newStreak = isCorrect ? ((prev.current_streak || 0) + 1) : 0;
-        // Update DB
-        supabase
-          .from('quiz_participants')
-          .update({
-            total_score: newScore,
-            current_streak: newStreak,
-            best_streak: Math.max(newStreak, (prev.best_streak || 0))
-          })
-          .eq('id', prev.id);
-        return {
-          ...prev,
+      // Update participant score
+      const newScore = participant.total_score + pointsEarned;
+      const newStreak = isCorrect ? ((participant.current_streak || 0) + 1) : 0;      
+      await supabase
+        .from('quiz_participants')
+        .update({ 
           total_score: newScore,
-          current_streak: newStreak
-        };
+          current_streak: newStreak,
+          best_streak: Math.max(newStreak, (participant.best_streak || 0))        })
+        .eq('id', participant.id);
+
+      setParticipant({
+        ...participant,
+        total_score: newScore,
+        current_streak: newStreak
       });
 
       setShowResult(true);
