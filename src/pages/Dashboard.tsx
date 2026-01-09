@@ -9,9 +9,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Quiz, CATEGORY_LABELS, CATEGORY_ICONS } from '@/types/quiz';
 import { generatePinCode, formatPinCode } from '@/lib/generatePin';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 import { 
   Plus, Play, Edit, Trash2, Users, Copy, QrCode, 
-  Loader2, LayoutDashboard, BarChart3 
+  Loader2, LayoutDashboard, BarChart3, Trophy, Clock
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -33,6 +34,23 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 
+interface LeaderboardEntry {
+  rank: number;
+  nickname: string;
+  avatar_emoji: string;
+  total_score: number;
+  best_streak: number;
+}
+
+interface QuizCompletion {
+  id: string;
+  quiz_id: string;
+  quiz_title: string;
+  completed_at: string;
+  participant_count: number;
+  leaderboard: LeaderboardEntry[];
+}
+
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -43,6 +61,9 @@ export default function Dashboard() {
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
   const [sessionMode, setSessionMode] = useState<'live_hosted' | 'self_paced'>('live_hosted');
   const [creatingSession, setCreatingSession] = useState(false);
+  const [leaderboardDialogOpen, setLeaderboardDialogOpen] = useState(false);
+  const [selectedCompletion, setSelectedCompletion] = useState<QuizCompletion | null>(null);
+  const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -86,6 +107,32 @@ export default function Dashboard() {
   const openHostDialog = (quiz: Quiz) => {
     setSelectedQuiz(quiz);
     setHostDialogOpen(true);
+  };
+
+  const openLeaderboard = async (quizId: string) => {
+    setLoadingLeaderboard(true);
+    setLeaderboardDialogOpen(true);
+    
+    const { data, error } = await supabase
+      .from('quiz_completions')
+      .select('*')
+      .eq('quiz_id', quizId)
+      .order('completed_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      toast.error('Failed to load leaderboard');
+      setLeaderboardDialogOpen(false);
+    } else if (data) {
+      setSelectedCompletion({
+        ...data,
+        leaderboard: data.leaderboard as unknown as LeaderboardEntry[]
+      });
+    } else {
+      setSelectedCompletion(null);
+    }
+    setLoadingLeaderboard(false);
   };
 
   const createSession = async () => {
@@ -241,6 +288,13 @@ export default function Dashboard() {
                           <Edit className="h-4 w-4" />
                         </Button>
                       </Link>
+                      <Button
+                        variant="outline"
+                        onClick={() => openLeaderboard(quiz.id)}
+                        title="View Leaderboard"
+                      >
+                        <Trophy className="h-4 w-4" />
+                      </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button variant="outline" className="text-destructive hover:text-destructive">
@@ -312,6 +366,65 @@ export default function Dashboard() {
               {creatingSession ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Play className="h-4 w-4 mr-2" />}
               Start Session
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Leaderboard Dialog */}
+      <Dialog open={leaderboardDialogOpen} onOpenChange={setLeaderboardDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-secondary" />
+              Quiz Leaderboard
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            {loadingLeaderboard ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : selectedCompletion ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-4 w-4" />
+                    {format(new Date(selectedCompletion.completed_at), 'MMM d, yyyy h:mm a')}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Users className="h-4 w-4" />
+                    {selectedCompletion.participant_count} players
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {selectedCompletion.leaderboard.slice(0, 10).map((entry, index) => (
+                    <div 
+                      key={index}
+                      className={`flex items-center justify-between p-3 rounded-lg ${
+                        index === 0 ? 'bg-secondary/20 border border-secondary/50' :
+                        index === 1 ? 'bg-muted' :
+                        index === 2 ? 'bg-accent/10' :
+                        'bg-muted/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="font-bold text-lg w-8">
+                          {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`}
+                        </span>
+                        <span>{entry.avatar_emoji} {entry.nickname}</span>
+                      </div>
+                      <span className="font-bold text-primary">{entry.total_score} pts</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Trophy className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                <p>No leaderboard data yet.</p>
+                <p className="text-sm">Complete a quiz session to see results here.</p>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>

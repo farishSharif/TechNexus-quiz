@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Shield, Users, BookOpen, TrendingUp, BarChart3 } from 'lucide-react';
+import { Loader2, Shield, Users, BookOpen, TrendingUp, BarChart3, Trophy, Clock } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface Stats {
   totalUsers: number;
@@ -16,15 +17,36 @@ interface Stats {
   totalPlays: number;
 }
 
+interface LeaderboardEntry {
+  rank: number;
+  nickname: string;
+  avatar_emoji: string;
+  total_score: number;
+  best_streak: number;
+}
+
+interface QuizCompletion {
+  id: string;
+  quiz_id: string;
+  quiz_title: string;
+  session_id: string;
+  host_id: string;
+  completed_at: string;
+  participant_count: number;
+  leaderboard: LeaderboardEntry[];
+}
+
 export default function Admin() {
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: roleLoading } = useUserRole();
   const [stats, setStats] = useState<Stats | null>(null);
+  const [completions, setCompletions] = useState<QuizCompletion[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (isAdmin) {
       fetchStats();
+      fetchCompletions();
     }
   }, [isAdmin]);
 
@@ -44,6 +66,22 @@ export default function Admin() {
       totalPlays
     });
     setLoading(false);
+  };
+
+  const fetchCompletions = async () => {
+    const { data, error } = await supabase
+      .from('quiz_completions')
+      .select('*')
+      .order('completed_at', { ascending: false });
+
+    if (!error && data) {
+      // Parse the leaderboard JSON for each completion
+      const parsed = data.map(item => ({
+        ...item,
+        leaderboard: item.leaderboard as unknown as LeaderboardEntry[]
+      }));
+      setCompletions(parsed);
+    }
   };
 
   if (authLoading || roleLoading) {
@@ -160,6 +198,66 @@ export default function Admin() {
             </Card>
           </div>
         )}
+
+        {/* Quiz Completions / Leaderboards */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-secondary" />
+              Quiz Completion Leaderboards
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {completions.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">
+                No quiz completions yet. Leaderboards will appear here after quizzes are played.
+              </p>
+            ) : (
+              <div className="space-y-6">
+                {completions.map((completion) => (
+                  <div key={completion.id} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h4 className="font-display font-bold text-lg">{completion.quiz_title}</h4>
+                        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-4 w-4" />
+                            {format(new Date(completion.completed_at), 'MMM d, yyyy h:mm a')}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Users className="h-4 w-4" />
+                            {completion.participant_count} players
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      {completion.leaderboard.slice(0, 10).map((entry, index) => (
+                        <div 
+                          key={index}
+                          className={`flex items-center justify-between p-3 rounded-lg ${
+                            index === 0 ? 'bg-secondary/20 border border-secondary/50' :
+                            index === 1 ? 'bg-muted' :
+                            index === 2 ? 'bg-accent/10' :
+                            'bg-muted/50'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="font-bold text-lg w-8">
+                              {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`}
+                            </span>
+                            <span>{entry.avatar_emoji} {entry.nickname}</span>
+                          </div>
+                          <span className="font-bold text-primary">{entry.total_score} pts</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Management Sections */}
         <div className="grid md:grid-cols-2 gap-6">

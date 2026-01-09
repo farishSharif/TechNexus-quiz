@@ -91,6 +91,39 @@ export type Database = {
           },
         ]
       }
+      quiz_completions: {
+        Row: {
+          completed_at: string
+          host_id: string
+          id: string
+          leaderboard: Json
+          participant_count: number
+          quiz_id: string
+          quiz_title: string
+          session_id: string
+        }
+        Insert: {
+          completed_at?: string
+          host_id: string
+          id?: string
+          leaderboard?: Json
+          participant_count?: number
+          quiz_id: string
+          quiz_title: string
+          session_id: string
+        }
+        Update: {
+          completed_at?: string
+          host_id?: string
+          id?: string
+          leaderboard?: Json
+          participant_count?: number
+          quiz_id?: string
+          quiz_title?: string
+          session_id?: string
+        }
+        Relationships: []
+      }
       quiz_participants: {
         Row: {
           avatar_emoji: string | null

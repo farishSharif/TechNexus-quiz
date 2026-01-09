@@ -37,7 +37,7 @@ export default function Host() {
   const [showAnswer, setShowAnswer] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number>(0);
 
-  // Generate the join URL for QR code (always use current origin to be production-safe)
+  // Generate the join URL for QR code
   const getJoinUrl = () => {
     if (!session) return '';
     const baseUrl = window.location.origin;
@@ -60,9 +60,16 @@ export default function Host() {
       .from('quiz_sessions')
       .select('*')
       .eq('id', sessionId)
-      .single();
+      .maybeSingle();
 
-    if (sessionError || !sessionData) {
+    if (sessionError) {
+      console.error('Session error:', sessionError);
+      toast.error('Failed to load session');
+      navigate('/dashboard');
+      return;
+    }
+
+    if (!sessionData) {
       toast.error('Session not found');
       navigate('/dashboard');
       return;
@@ -70,22 +77,42 @@ export default function Host() {
 
     setSession(sessionData as QuizSession);
 
-    // Fetch quiz
-    const { data: quizData } = await supabase
+    // Fetch quiz - use maybeSingle to avoid throwing on no results
+    const { data: quizData, error: quizError } = await supabase
       .from('quizzes')
       .select('*')
       .eq('id', sessionData.quiz_id)
-      .single();
+      .maybeSingle();
     
+    if (quizError) {
+      console.error('Quiz error:', quizError);
+      toast.error('Failed to load quiz data');
+      navigate('/dashboard');
+      return;
+    }
+
+    if (!quizData) {
+      toast.error('Quiz not found or access denied');
+      navigate('/dashboard');
+      return;
+    }
+
     setQuiz(quizData as Quiz);
 
     // Fetch questions
-    const { data: questionsData } = await supabase
+    const { data: questionsData, error: questionsError } = await supabase
       .from('questions')
       .select('*')
       .eq('quiz_id', sessionData.quiz_id)
       .order('order_index');
     
+    if (questionsError) {
+      console.error('Questions error:', questionsError);
+      toast.error('Failed to load questions');
+      navigate('/dashboard');
+      return;
+    }
+
     setQuestions(questionsData as Question[] || []);
 
     // Fetch participants
@@ -202,7 +229,7 @@ export default function Host() {
   };
 
   const endQuiz = async () => {
-    if (!session) return;
+    if (!session || !quiz || !user) return;
     
     const { error } = await supabase
       .from('quiz_sessions')
@@ -217,11 +244,43 @@ export default function Host() {
       setShowQRModal(false);
       
       // Update play count
-      if (quiz) {
-        await supabase
-          .from('quizzes')
-          .update({ play_count: quiz.play_count + 1 })
-          .eq('id', quiz.id);
+      await supabase
+        .from('quizzes')
+        .update({ play_count: quiz.play_count + 1 })
+        .eq('id', quiz.id);
+
+      // Delete ALL previous completion records for this quiz (keep only latest)
+      const { error: deleteError } = await supabase
+        .from('quiz_completions')
+        .delete()
+        .eq('quiz_id', quiz.id);
+
+      if (deleteError) {
+        console.log('No previous records to delete or delete error:', deleteError);
+      }
+
+      // Save new completion record
+      const leaderboardData = participants.map((p, index) => ({
+        rank: index + 1,
+        nickname: p.nickname,
+        avatar_emoji: p.avatar_emoji,
+        total_score: p.total_score,
+        best_streak: p.best_streak
+      }));
+
+      const { error: insertError } = await supabase
+        .from('quiz_completions')
+        .insert({
+          quiz_id: quiz.id,
+          quiz_title: quiz.title,
+          session_id: session.id,
+          host_id: user.id,
+          participant_count: participants.length,
+          leaderboard: leaderboardData
+        });
+
+      if (insertError) {
+        console.error('Failed to save leaderboard:', insertError);
       }
     }
   };
@@ -294,7 +353,7 @@ export default function Host() {
             {/* PIN Display - using solid background instead of gradient */}
             <Card className="mb-8 border-2 border-border">
               <CardContent className="py-8">
-                <p className="text-muted-foreground mb-2">Join at <span className="font-bold text-foreground">{window.location.host}</span> with PIN:</p>
+                <p className="text-muted-foreground mb-2">Join at <span className="font-bold text-foreground">technexusquiz.app</span> with PIN:</p>
                 <div className="flex items-center justify-center gap-4 mb-4">
                   <div className="bg-muted/50 px-6 py-3 rounded-xl">
                     <span className="font-display text-5xl md:text-7xl font-bold tracking-wider text-primary">
