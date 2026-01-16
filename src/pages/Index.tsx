@@ -32,7 +32,7 @@ export default function Index() {
 
           {/* Badge */}
           <div className="inline-block mb-6 animate-bounce-subtle">
-            <span className="bg-white border-b-4 border-gray-200 text-primary font-black px-6 py-2 rounded-2xl shadow-sm text-sm uppercase tracking-widest">
+            <span className="bg-card border-b-4 border-border/50 text-primary font-black px-6 py-2 rounded-2xl shadow-sm text-sm uppercase tracking-widest">
               Gamified Learning 🚀
             </span>
           </div>
@@ -49,7 +49,7 @@ export default function Index() {
           </p>
 
           {/* Main Action Stage */}
-          <div className="bg-white p-4 md:p-8 rounded-3xl border-b-8 border-gray-200 shadow-xl max-w-3xl mx-auto transform transition-all hover:-translate-y-1 duration-300">
+          <div className="bg-card p-4 md:p-8 rounded-3xl border-b-8 border-border/50 shadow-xl max-w-3xl mx-auto transform transition-all hover:-translate-y-1 duration-300">
             <div className="flex flex-col md:flex-row gap-4 items-center justify-center p-2">
 
               <div className="flex-1 w-full relative group">
@@ -61,7 +61,7 @@ export default function Index() {
                   placeholder="ENTER GAME PIN"
                   value={pinCode}
                   onChange={(e) => setPinCode(e.target.value)}
-                  className="pl-14 text-center text-2xl font-black h-20 rounded-2xl border-4 border-gray-100 focus:border-primary focus:ring-4 focus:ring-primary/20 bg-gray-50 uppercase tracking-widest placeholder:text-gray-300 transition-all group-hover:bg-white"
+                  className="pl-14 text-center text-2xl font-black h-20 rounded-2xl border-4 border-border/50 focus:border-primary focus:ring-4 focus:ring-primary/20 bg-muted/50 uppercase tracking-widest placeholder:text-muted-foreground transition-all group-hover:bg-card"
                   maxLength={7}
                 />
               </div>
@@ -94,7 +94,7 @@ export default function Index() {
       </section>
 
       {/* Feature Tiles Section */}
-      <section className="py-24 bg-gray-50">
+      <section className="py-24 bg-muted/30">
         <div className="container">
           <h2 className="font-display text-4xl md:text-5xl font-black text-center mb-16 tracking-tight">
             Why Players <span className="text-destructive">Love It</span> ❤️
@@ -109,7 +109,7 @@ export default function Index() {
             ].map((feature, i) => (
               <div
                 key={i}
-                className="group relative bg-white p-8 rounded-3xl border-b-8 border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 hover:border-primary/20 cursor-default"
+                className="group relative bg-card p-8 rounded-3xl border-b-8 border-border/50 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 hover:border-primary/20 cursor-default"
               >
                 <div className={`w-20 h-20 ${feature.color} rounded-2xl flex items-center justify-center text-4xl mb-6 shadow-inner mx-auto group-hover:scale-110 transition-transform duration-300`}>
                   {feature.icon}
@@ -133,7 +133,7 @@ export default function Index() {
             Join thousands of creators and players. It's free, fun, and faster than ever to get started.
           </p>
           <Link to="/auth?tab=signup">
-            <Button size="xl" variant="secondary" className="bg-white text-primary border-white/50 hover:bg-gray-50 text-xl px-12 h-20 shadow-2xl">
+            <Button size="xl" variant="secondary" className="bg-background text-primary border-white/50 hover:bg-muted text-xl px-12 h-20 shadow-2xl">
               Start Creating for Free 🚀
             </Button>
           </Link>

@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { LogOut, User, Plus, LayoutDashboard, Shield, Menu, X } from 'lucide-react';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -95,6 +96,7 @@ export function Navbar() {
               </Link>
             </>
           )}
+          <ThemeToggle />
         </div>
 
         {/* Mobile Menu Button */}
@@ -171,6 +173,10 @@ export function Navbar() {
                 </Link>
               </>
             )}
+            <div className="flex justify-between items-center px-2 py-2 border-t mt-2">
+              <span className="text-sm font-semibold">Theme</span>
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       )}

@@ -12,7 +12,7 @@ interface QuizCardProps {
 export function QuizCard({ quiz, questionCount = 0 }: QuizCardProps) {
   return (
     <Link to={`/quiz/${quiz.id}`}>
-      <Card className="quiz-card h-full overflow-hidden border-2 border-transparent hover:border-primary/20 cursor-pointer">
+      <Card className="quiz-card h-full overflow-hidden border-2 border-border dark:border-white/10 bg-card dark:bg-black/40 backdrop-blur-md hover:border-primary/20 cursor-pointer transition-colors">
         {/* Cover Image */}
         <div className="relative h-36 bg-primary/10">
           {quiz.cover_image_url ? (

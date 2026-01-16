@@ -219,7 +219,8 @@ export default function Host() {
       .update({
         status: 'active',
         started_at: new Date().toISOString(),
-        current_question_index: 0
+        current_question_index: 0,
+        show_leaderboard: false
       })
       .eq('id', session.id);
 
@@ -391,26 +392,26 @@ export default function Host() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b bg-card">
-        <div className="container flex items-center justify-between h-16">
-          <div className="flex items-center gap-4">
+        <div className="container flex flex-col md:flex-row items-center justify-between gap-4 py-4 min-h-[4rem]">
+          <div className="flex items-center gap-4 w-full md:w-auto">
             <Link to="/dashboard">
               <Button variant="ghost" size="icon">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
-            <div>
-              <h1 className="font-display font-bold">{quiz.title}</h1>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex-1 md:flex-none">
+              <h1 className="font-display font-bold text-lg md:text-xl truncate">{quiz.title}</h1>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
                 <Badge variant={session.status === 'waiting' ? 'secondary' : session.status === 'active' ? 'default' : 'outline'}>
                   {session.status}
                 </Badge>
-                <span>•</span>
-                <span>{questions.length} questions</span>
+                <span className="hidden sm:inline">•</span>
+                <span className="text-xs sm:text-sm">{questions.length} questions</span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
             <div className="flex items-center gap-2">
               <Users className="h-5 w-5 text-muted-foreground" />
               <span className="font-bold">{participants.length}</span>
@@ -435,7 +436,7 @@ export default function Host() {
         {session.status === 'waiting' && (
           <div className="max-w-2xl mx-auto text-center">
             {/* PIN Display - using solid background instead of gradient */}
-            <Card className="mb-8 border-2 border-border">
+            <Card className="mb-8 border-2 border-border dark:border-white/10 bg-card dark:bg-black/20 backdrop-blur-md">
               <CardContent className="py-8">
                 <p className="text-muted-foreground mb-2">Join at <span className="font-bold text-foreground">technexusquiz.app</span> with PIN:</p>
                 <div className="flex items-center justify-center gap-4 mb-4">
@@ -458,7 +459,7 @@ export default function Host() {
             </Card>
 
             {/* Participants - solid card background */}
-            <Card className="mb-8 border border-border">
+            <Card className="mb-8 border border-border dark:border-white/10 bg-card dark:bg-black/20 backdrop-blur-md">
               <CardContent className="py-6">
                 <h3 className="font-display font-bold mb-4">
                   Players ({participants.length})
@@ -515,7 +516,7 @@ export default function Host() {
 
             {/* Question Display / Leaderboard Intermission */}
             {!isLeaderboardView ? (
-              <Card className="mb-8 border-2 border-border shadow-md">
+              <Card className="mb-8 border-2 border-border dark:border-white/10 bg-card dark:bg-black/20 backdrop-blur-md shadow-xl">
                 <CardContent className="py-8">
                   <div className="flex items-center justify-between mb-4">
                     <Badge variant="outline">
@@ -550,7 +551,7 @@ export default function Host() {
                     {participants.slice(0, 5).map((p, index) => (
                       <div
                         key={p.id}
-                        className="flex items-center justify-between p-4 rounded-xl bg-white border-b-4 border-slate-200 shadow-lg transform transition-all duration-500 animate-in slide-in-from-right fade-in"
+                        className="flex items-center justify-between p-4 rounded-xl bg-card border-b-4 border-border/50 shadow-lg transform transition-all duration-500 animate-in slide-in-from-right fade-in"
                         style={{ animationDelay: `${index * 100}ms` }}
                       >
                         <div className="flex items-center gap-4">
@@ -690,7 +691,7 @@ export default function Host() {
                     {participants.slice(3).map((p, index) => (
                       <div
                         key={p.id}
-                        className="flex items-center justify-between p-3 rounded-xl bg-white border-2 border-slate-100 shadow-sm"
+                        className="flex items-center justify-between p-3 rounded-xl bg-card border-2 border-border/50 shadow-sm"
                       >
                         <div className="flex items-center gap-4">
                           <span className="font-bold text-xl w-8 text-slate-400">#{index + 4}</span>

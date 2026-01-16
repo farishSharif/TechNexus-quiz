@@ -135,7 +135,7 @@ export default function Join() {
 
       <div className="container flex items-center justify-center min-h-[calc(100vh-10rem)] py-12 px-4">
         {/* Stage Card */}
-        <div className="w-full max-w-md bg-white p-8 rounded-3xl border-b-8 border-gray-200 shadow-xl transform transition-all hover:-translate-y-1">
+        <div className="w-full max-w-md bg-card p-8 rounded-3xl border-b-8 border-border/50 shadow-xl transform transition-all hover:-translate-y-1">
           <div className="text-center mb-8">
             <div className="mx-auto mb-6 w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center rotate-3 hover:rotate-6 transition-transform">
               <QrCode className="h-10 w-10 text-primary" />
@@ -154,20 +154,28 @@ export default function Join() {
                   placeholder="000 000"
                   value={pinCode}
                   onChange={(e) => setPinCode(e.target.value)}
-                  className="text-center text-4xl font-black h-20 rounded-2xl border-4 border-gray-100 focus:border-primary focus:ring-4 focus:ring-primary/20 tracking-[1rem] placeholder:tracking-normal placeholder:font-bold"
+                  className="text-center text-4xl font-black h-20 rounded-2xl border-4 border-border/50 focus:border-primary focus:ring-4 focus:ring-primary/20 tracking-[1rem] placeholder:tracking-normal placeholder:font-bold"
                   maxLength={7}
                 />
-                <div className="flex gap-4">
-                  <Button type="submit" size="xl" className="flex-1 text-xl h-16" disabled={isLoading}>
-                    {isLoading ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : <Play className="h-6 w-6 mr-2" />}
-                    Find Quiz
+                <div className="space-y-4">
+                  <Button type="submit" size="xl" className="w-full text-xl h-16 font-display font-black tracking-wide shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all" disabled={isLoading}>
+                    {isLoading ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : <Play className="h-6 w-6 mr-2 fill-current" />}
+                    FIND QUIZ
                   </Button>
-                  <div className="h-16">
-                    <QRScanner
-                      onScan={handleQRScan}
-                      className="h-full px-6 text-lg font-bold border-4 border-gray-100 hover:border-gray-300 transition-colors"
-                    />
+
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-card px-2 text-muted-foreground font-bold">Or</span>
+                    </div>
                   </div>
+
+                  <QRScanner
+                    onScan={handleQRScan}
+                    className="w-full h-14 text-lg font-bold border-2 border-dashed border-primary/30 hover:border-primary hover:bg-primary/5 transition-all text-muted-foreground hover:text-primary"
+                  />
                 </div>
               </form>
             ) : (
@@ -182,7 +190,7 @@ export default function Join() {
                     placeholder="Enter nickname..."
                     value={nickname}
                     onChange={(e) => setNickname(e.target.value)}
-                    className="text-center text-2xl font-black h-16 rounded-2xl border-4 border-gray-100"
+                    className="text-center text-2xl font-black h-16 rounded-2xl border-4 border-border/50"
                     maxLength={20}
                     autoFocus
                   />
@@ -190,15 +198,15 @@ export default function Join() {
 
                 <div className="space-y-4">
                   <p className="text-lg font-black text-center text-muted-foreground">Pick your Avatar</p>
-                  <div className="grid grid-cols-4 sm:grid-cols-5 gap-3 bg-gray-50 p-4 rounded-2xl border-2 border-dashed border-gray-200 justify-items-center">
+                  <div className="grid grid-cols-4 sm:grid-cols-5 gap-3 bg-muted/30 p-4 rounded-2xl border-2 border-dashed border-border/50 justify-items-center">
                     {avatarSeeds.map((seed) => (
                       <button
                         key={seed}
                         type="button"
                         onClick={() => setSelectedEmoji(seed)}
                         className={`p-1 rounded-full transition-all hover:scale-110 active:scale-95 ${selectedEmoji === seed
-                          ? 'ring-4 ring-primary shadow-xl scale-110 bg-white'
-                          : 'hover:bg-white hover:shadow-md opacity-80 hover:opacity-100'
+                          ? 'ring-4 ring-primary shadow-xl scale-110 bg-card'
+                          : 'hover:bg-card hover:shadow-md opacity-80 hover:opacity-100'
                           }`}
                       >
                         <AvatarDisplay seed={seed} size="md" />

@@ -208,21 +208,21 @@ export default function Dashboard() {
 
         {/* Stats */}
         <div className="grid sm:grid-cols-3 gap-4 mb-8">
-          <Card>
+          <Card className="bg-card dark:bg-black/40 border-border dark:border-white/10 backdrop-blur-md shadow-sm dark:shadow-none">
             <CardContent className="pt-6">
               <div className="text-3xl font-bold text-primary">{quizzes.length}</div>
               <p className="text-muted-foreground">Total Quizzes</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-card dark:bg-black/40 border-border dark:border-white/10 backdrop-blur-md shadow-sm dark:shadow-none">
             <CardContent className="pt-6">
-              <div className="text-3xl font-bold text-secondary">
+              <div className="text-3xl font-bold text-foreground">
                 {quizzes.reduce((sum, q) => sum + q.question_count, 0)}
               </div>
               <p className="text-muted-foreground">Total Questions</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-card dark:bg-black/40 border-border dark:border-white/10 backdrop-blur-md shadow-sm dark:shadow-none">
             <CardContent className="pt-6">
               <div className="text-3xl font-bold text-accent">
                 {quizzes.reduce((sum, q) => sum + q.play_count, 0)}
@@ -233,17 +233,18 @@ export default function Dashboard() {
         </div>
 
         {/* Quizzes */}
-        <Card>
-          <CardHeader>
-            <CardTitle>My Quizzes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : quizzes.length === 0 ? (
-              <div className="text-center py-12">
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold">My Quizzes</h2>
+          </div>
+
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : quizzes.length === 0 ? (
+            <Card>
+              <CardContent className="text-center py-12">
                 <p className="text-muted-foreground mb-4">You haven't created any quizzes yet</p>
                 <Link to="/create">
                   <Button size="lg" className="font-bold">
@@ -251,81 +252,82 @@ export default function Dashboard() {
                     Create Your First Quiz
                   </Button>
                 </Link>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {quizzes.map((quiz) => (
-                  <div
-                    key={quiz.id}
-                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl border-2 border-b-4 border-gray-100 bg-white hover:border-primary/20 hover:shadow-md transition-all"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center text-2xl">
-                        {CATEGORY_ICONS[quiz.category]}
-                      </div>
-                      <div>
-                        <h3 className="font-semibold">{quiz.title}</h3>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Badge variant="outline">{CATEGORY_LABELS[quiz.category]}</Badge>
-                          <span>•</span>
-                          <span>{quiz.question_count} questions</span>
-                          <span>•</span>
-                          <span>{quiz.play_count} plays</span>
-                        </div>
-                      </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {quizzes.map((quiz) => (
+                <div
+                  key={quiz.id}
+                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl border-2 border-b-4 border-border/50 bg-card/50 backdrop-blur-sm hover:border-primary/20 hover:shadow-md transition-all text-card-foreground"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center text-2xl">
+                      {CATEGORY_ICONS[quiz.category]}
                     </div>
-
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                      <Button
-                        onClick={() => openHostDialog(quiz)}
-                        className="flex-1 sm:flex-none font-bold"
-                      >
-                        <Play className="h-4 w-4 mr-2" />
-                        Host
-                      </Button>
-                      <Link to={`/edit/${quiz.id}`} className="flex-1 sm:flex-none">
-                        <Button variant="outline" className="w-full">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      <Button
-                        variant="outline"
-                        onClick={() => openLeaderboard(quiz.id)}
-                        title="View Leaderboard"
-                      >
-                        <Trophy className="h-4 w-4" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="outline" className="text-destructive hover:text-destructive">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Quiz</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete "{quiz.title}"? This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDelete(quiz.id)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                    <div>
+                      <h3 className="font-semibold">{quiz.title}</h3>
+                      <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground mt-1">
+                        <Badge variant="outline" className="whitespace-nowrap">{CATEGORY_LABELS[quiz.category]}</Badge>
+                        <span className="hidden sm:inline">•</span>
+                        <span className="whitespace-nowrap">{quiz.question_count} questions</span>
+                        <span className="hidden sm:inline">•</span>
+                        <span className="whitespace-nowrap">{quiz.play_count} plays</span>
+                      </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+
+                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                    <Button
+                      onClick={() => openHostDialog(quiz)}
+                      className="flex-1 sm:flex-none font-bold min-w-[120px]"
+                    >
+                      <Play className="h-4 w-4 mr-2" />
+                      Host
+                    </Button>
+                    <Link to={`/edit/${quiz.id}`} className="flex-1 sm:flex-none">
+                      <Button variant="outline" className="w-full">
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="outline"
+                      onClick={() => openLeaderboard(quiz.id)}
+                      title="View Leaderboard"
+                      className="flex-1 sm:flex-none"
+                    >
+                      <Trophy className="h-4 w-4" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" className="text-destructive hover:text-destructive flex-1 sm:flex-none">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Quiz</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete "{quiz.title}"? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDelete(quiz.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Host Session Dialog */}
@@ -427,6 +429,6 @@ export default function Dashboard() {
           </div>
         </DialogContent>
       </Dialog>
-    </MainLayout>
+    </MainLayout >
   );
 }

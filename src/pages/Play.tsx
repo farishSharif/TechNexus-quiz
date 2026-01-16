@@ -330,7 +330,7 @@ export default function Play() {
             <h2 className="font-display text-2xl font-bold mb-2">You're in!</h2>
             <p className="text-muted-foreground">Waiting for host to start the quiz...</p>
 
-            <Card className="mt-8">
+            <Card className="mt-8 bg-card dark:bg-black/20 border-border dark:border-white/10 backdrop-blur-md">
               <CardContent className="py-6">
                 <h3 className="font-semibold mb-4">Players ({participants.length})</h3>
                 <div className="flex flex-wrap gap-2 justify-center">
@@ -374,7 +374,7 @@ export default function Play() {
             </div>
 
             {/* Question */}
-            <Card className="mb-6">
+            <Card className="mb-6 bg-card dark:bg-black/20 border-border dark:border-white/10 backdrop-blur-md">
               <CardContent className="py-6">
                 <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-black text-center break-words whitespace-pre-wrap overflow-hidden leading-tight">
                   {currentQuestion.question_text}
@@ -387,7 +387,7 @@ export default function Play() {
               <div className="space-y-4">
                 {session?.show_leaderboard ? (
                   /* Live Leaderboard - Only shown when Host enables it */
-                  <Card className="mb-6 animate-in fade-in slide-in-from-bottom duration-700">
+                  <Card className="mb-6 bg-card dark:bg-black/40 border-border dark:border-white/10 backdrop-blur-md animate-in fade-in slide-in-from-bottom duration-700">
                     <CardContent className="py-4">
                       <h3 className="font-display font-bold mb-2 flex items-center gap-2">
                         <Trophy className="h-5 w-5 text-secondary" />
@@ -520,19 +520,16 @@ export default function Play() {
             <h2 className="font-display text-3xl font-bold mb-2">Quiz Complete!</h2>
             <p className="text-muted-foreground mb-6">Great job playing!</p>
 
-            <Card className="mb-6">
+            <Card className="mb-6 bg-card/40 backdrop-blur-md border-primary/20">
               <CardContent className="py-6">
                 <p className="text-muted-foreground mb-2">Your Score</p>
                 <p className="font-display text-6xl font-black text-primary animate-pulse">
                   {participant.total_score}
                 </p>
-                {/*<p className="text-sm text-muted-foreground mt-2">
-                  Best streak: {participant.best_streak} 🔥
-                </p>*/}
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-card/40 backdrop-blur-md border-primary/20">
               <CardContent className="py-6">
                 <h3 className="font-display font-bold mb-4 flex items-center justify-center gap-2">
                   <Trophy className="h-5 w-5 text-secondary" />
@@ -542,7 +539,7 @@ export default function Play() {
                   {participants.slice(0, 10).map((p, index) => (
                     <div
                       key={p.id}
-                      className={`flex items-center justify-between p-3 rounded-lg ${p.id === participant.id ? 'bg-primary/10 border border-primary' : 'bg-muted/50'
+                      className={`flex items-center justify-between p-3 rounded-lg border ${p.id === participant.id ? 'bg-primary/20 border-primary' : 'bg-black/30 border-white/5'
                         }`}
                     >
                       <div className="flex items-center gap-3">

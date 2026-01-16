@@ -68,7 +68,7 @@ export default function Auth() {
     <MainLayout>
       <div className="container flex items-center justify-center min-h-[calc(100vh-10rem)] py-12">
         {/* Stage Card */}
-        <div className="w-full max-w-md bg-white p-8 rounded-3xl border-b-8 border-gray-200 shadow-xl mx-auto transform transition-all duration-300">
+        <div className="w-full max-w-md bg-card p-8 rounded-3xl border-b-8 border-border/50 shadow-xl mx-auto transform transition-all duration-300">
           <div className="text-center mb-8">
             <h1 className="font-display text-4xl font-black mb-2">
               Welcome to
@@ -83,13 +83,13 @@ export default function Auth() {
             <TabsList className="grid w-full grid-cols-2 mb-8 h-14 bg-muted/50 rounded-2xl p-1">
               <TabsTrigger
                 value="signin"
-                className="rounded-xl text-lg font-bold data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md h-full"
+                className="rounded-xl text-lg font-bold data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md h-full"
               >
                 Sign In
               </TabsTrigger>
               <TabsTrigger
                 value="signup"
-                className="rounded-xl text-lg font-bold data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md h-full"
+                className="rounded-xl text-lg font-bold data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md h-full"
               >
                 Sign Up
               </TabsTrigger>
