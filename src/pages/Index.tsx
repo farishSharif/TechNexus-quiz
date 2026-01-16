@@ -19,95 +19,122 @@ export default function Index() {
 
   return (
     <MainLayout>
-      {/* Hero Section */}
-      <section className="relative overflow-hidden gradient-hero">
-        <div className="absolute inset-0 opacity-30">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl animate-float" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/20 rounded-full blur-3xl animate-float stagger-2" />
+      {/* Hero / Stage Section */}
+      <section className="relative min-h-[90vh] flex flex-col items-center justify-center overflow-hidden bg-background py-20">
+
+        {/* Dynamic Background Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 left-[10%] w-64 h-64 bg-primary/20 rounded-full blur-[100px] animate-pulse-glow" />
+          <div className="absolute bottom-20 right-[10%] w-80 h-80 bg-success/20 rounded-full blur-[100px] animate-pulse-glow stagger-2" />
         </div>
-        
-        <div className="container relative py-20 md:py-32">
-          <div className="max-w-3xl mx-auto text-center">
-            <h1 className="font-display text-4xl md:text-6xl font-bold mb-6 animate-slide-up">
-              Learn, Play & <span className="text-gradient">Compete</span> with
-              <br /><span className="text-gradient">Tech Nexus</span> <span className="text-muted-foreground">Quiz</span>
-            </h1>
-            <p className="text-lg md:text-xl text-muted-foreground mb-8 animate-slide-up stagger-1">
-              Create engaging quizzes, challenge friends in real-time, and discover 
-              new knowledge through interactive gameplay.
-            </p>
 
-            {/* Quick Join Form */}
-            <form onSubmit={handleJoinQuiz} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto mb-8 animate-slide-up stagger-2">
-              <Input
-                type="text"
-                placeholder="Enter quiz PIN"
-                value={pinCode}
-                onChange={(e) => setPinCode(e.target.value)}
-                className="text-center text-lg font-semibold h-12"
-                maxLength={7}
-              />
-              <Button type="submit" size="lg" className="gradient-primary border-0 btn-bounce h-12">
-                <Play className="h-5 w-5 mr-2" />
-                Join Quiz
+        <div className="container relative z-10 max-w-5xl mx-auto text-center">
+
+          {/* Badge */}
+          <div className="inline-block mb-6 animate-bounce-subtle">
+            <span className="bg-white border-b-4 border-gray-200 text-primary font-black px-6 py-2 rounded-2xl shadow-sm text-sm uppercase tracking-widest">
+              Gamified Learning 🚀
+            </span>
+          </div>
+
+          <h1 className="font-display text-5xl md:text-7xl font-black tracking-tight mb-8 leading-tight drop-shadow-sm">
+            Ready to <span className="text-primary underline decoration-wavy decoration-4 underline-offset-8">Play</span> &
+            <br />
+            <span className="text-secondary-foreground">Master New Skills?</span>
+          </h1>
+
+          <p className="text-xl md:text-2xl text-muted-foreground font-bold mb-12 max-w-2xl mx-auto leading-relaxed">
+            Join the action-packed quiz platform where learning feels like a game.
+            Challenge friends, earn badges, and top the leaderboard! 🏆
+          </p>
+
+          {/* Main Action Stage */}
+          <div className="bg-white p-4 md:p-8 rounded-3xl border-b-8 border-gray-200 shadow-xl max-w-3xl mx-auto transform transition-all hover:-translate-y-1 duration-300">
+            <div className="flex flex-col md:flex-row gap-4 items-center justify-center p-2">
+
+              <div className="flex-1 w-full relative group">
+                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                  <span className="text-2xl">🔑</span>
+                </div>
+                <Input
+                  type="text"
+                  placeholder="ENTER GAME PIN"
+                  value={pinCode}
+                  onChange={(e) => setPinCode(e.target.value)}
+                  className="pl-14 text-center text-2xl font-black h-20 rounded-2xl border-4 border-gray-100 focus:border-primary focus:ring-4 focus:ring-primary/20 bg-gray-50 uppercase tracking-widest placeholder:text-gray-300 transition-all group-hover:bg-white"
+                  maxLength={7}
+                />
+              </div>
+
+              <Button
+                onClick={handleJoinQuiz}
+                size="xl"
+                className="w-full md:w-auto text-xl bg-success text-white border-success-darker hover:bg-success hover:scale-105 active:scale-95 transition-all shadow-xl h-20"
+              >
+                JOIN NOW ⚡
               </Button>
-            </form>
+            </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-slide-up stagger-3">
-              <Link to="/dashboard">
-                <Button variant="outline" size="lg" className="btn-bounce">
-                  Dashboard
+            <div className="mt-8 flex flex-col md:flex-row items-center justify-center gap-6 border-t-2 border-gray-100 pt-8 border-dashed">
+              <Link to="/create">
+                <Button variant="outline" size="lg" className="text-lg font-bold border-2 hover:bg-gray-50">
+                  <Plus className="h-6 w-6 mr-2 text-primary" />
+                  Create a Quiz
                 </Button>
               </Link>
-              <Link to="/create">
-                <Button size="lg" className="bg-secondary text-secondary-foreground hover:bg-secondary/90 btn-bounce">
-                  <Plus className="h-5 w-5 mr-2" />
-                  Create Quiz
+              <Link to="/dashboard" className="text-muted-foreground font-bold hover:text-primary transition-colors flex items-center gap-2">
+                <Button className="font-bold">
+                  Dashboard
                 </Button>
               </Link>
             </div>
           </div>
+
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20 bg-background">
+      {/* Feature Tiles Section */}
+      <section className="py-24 bg-gray-50">
         <div className="container">
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-center mb-12">
-            Why Choose <span className="text-gradient">Tech Nexus</span> <span className="text-muted-foreground">Quiz?</span>
+          <h2 className="font-display text-4xl md:text-5xl font-black text-center mb-16 tracking-tight">
+            Why Players <span className="text-destructive">Love It</span> ❤️
           </h2>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
-              { icon: Users, title: 'Real-Time Multiplayer', desc: 'Compete with friends and players worldwide in live quiz sessions.' },
-              { icon: QrCode, title: 'Easy QR Joining', desc: 'Scan a QR code to instantly join any quiz session.' },
-              { icon: Zap, title: 'Instant Feedback', desc: 'Get immediate results and see live leaderboards.' },
-              { icon: Trophy, title: 'Climb the Ranks', desc: 'Track your progress and compete for the top spots.' },
+              { icon: '🎮', color: 'bg-purple-100 text-purple-600', title: 'Live Battles', desc: 'Compete in real-time multiplayer showdowns.' },
+              { icon: '📱', color: 'bg-blue-100 text-blue-600', title: 'Scan & Play', desc: 'Jump in instantly with a simple QR code scan.' },
+              { icon: '⚡', color: 'bg-yellow-100 text-yellow-600', title: 'Power Ups', desc: 'Earn streaks and bonuses for fast answers.' },
+              { icon: '👑', color: 'bg-green-100 text-green-600', title: 'Leaderboards', desc: 'Climb the ranks and claim your victory.' },
             ].map((feature, i) => (
-              <div key={i} className="group p-6 rounded-2xl bg-card border border-border hover:border-primary/30 transition-all hover:shadow-lg">
-                <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <feature.icon className="h-6 w-6 text-primary" />
+              <div
+                key={i}
+                className="group relative bg-white p-8 rounded-3xl border-b-8 border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 hover:border-primary/20 cursor-default"
+              >
+                <div className={`w-20 h-20 ${feature.color} rounded-2xl flex items-center justify-center text-4xl mb-6 shadow-inner mx-auto group-hover:scale-110 transition-transform duration-300`}>
+                  {feature.icon}
                 </div>
-                <h3 className="font-display text-lg font-bold mb-2">{feature.title}</h3>
-                <p className="text-sm text-muted-foreground">{feature.desc}</p>
+                <h3 className="font-display text-2xl font-black mb-3 text-center group-hover:text-primary transition-colors">{feature.title}</h3>
+                <p className="text-muted-foreground font-bold text-center leading-relaxed">{feature.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 gradient-primary">
-        <div className="container text-center">
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-white mb-4">
-            Ready to Get Started?
+      {/* Big Bold CTA */}
+      <section className="py-24 bg-primary overflow-hidden relative">
+        <div className="absolute inset-0 opacity-10 pattern-dots" />
+        <div className="container text-center relative z-10">
+          <h2 className="font-display text-4xl md:text-6xl font-black text-white mb-8 drop-shadow-md">
+            Unleash Your Inner Genius! 🧠
           </h2>
-          <p className="text-lg text-white/80 mb-8 max-w-xl mx-auto">
-            Create your first quiz in minutes and start engaging your audience today.
+          <p className="text-xl text-white/90 font-bold mb-12 max-w-2xl mx-auto">
+            Join thousands of creators and players. It's free, fun, and faster than ever to get started.
           </p>
           <Link to="/auth?tab=signup">
-            <Button size="lg" variant="secondary" className="btn-bounce text-lg px-8">
-              Create Free Account
+            <Button size="xl" variant="secondary" className="bg-white text-primary border-white/50 hover:bg-gray-50 text-xl px-12 h-20 shadow-2xl">
+              Start Creating for Free 🚀
             </Button>
           </Link>
         </div>

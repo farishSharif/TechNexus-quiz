@@ -39,7 +39,7 @@ const createEmptyQuestion = (timeLimit: number = 30): QuestionForm => ({
 export default function Create() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<QuizCategory>('technology');
@@ -64,7 +64,7 @@ export default function Create() {
         <div className="container py-20 text-center">
           <h1 className="font-display text-2xl font-bold mb-4">Sign in to create quizzes</h1>
           <Link to="/auth">
-            <Button className="gradient-primary border-0">Sign In</Button>
+            <Button size="lg" className="font-bold">Sign In</Button>
           </Link>
         </div>
       </MainLayout>
@@ -101,7 +101,7 @@ export default function Create() {
       if (q.id === questionId) {
         const optionValue = q.options[optionIndex];
         const isCurrentlyCorrect = q.correct_answers.includes(optionValue);
-        
+
         if (q.question_type === 'multiple_choice_single') {
           return { ...q, correct_answers: isCurrentlyCorrect ? [] : [optionValue] };
         } else {
@@ -122,12 +122,12 @@ export default function Create() {
       toast.error('Please enter a quiz title');
       return;
     }
-    
+
     if (questions.some(q => !q.question_text.trim())) {
       toast.error('All questions must have text');
       return;
     }
-    
+
     if (questions.some(q => q.correct_answers.length === 0)) {
       toast.error('All questions must have at least one correct answer');
       return;
@@ -191,13 +191,13 @@ export default function Create() {
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <Link to="/dashboard">
               <Button variant="ghost" size="icon" className="shrink-0">
-               <ArrowLeft className="h-5 w-5" />
+                <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
             <h1 className="font-display text-xl sm:text-2xl font-bold truncate">Create Quiz</h1>
-            </div>
-           <Button onClick={handleSave} disabled={saving} className="gradient-primary border-0 shrink-0">
-            {saving ? <Loader2 className="h-4 w-4 animate-spin sm:mr-2" /> : <Save className="h-4 w-4 sm:mr-2" />}
+          </div>
+          <Button onClick={handleSave} disabled={saving} size="lg" variant="success" className="shrink-0 text-lg font-bold">
+            {saving ? <Loader2 className="h-5 w-5 animate-spin sm:mr-2" /> : <Save className="h-5 w-5 sm:mr-2" />}
             <span className="hidden sm:inline">Save Quiz</span>
           </Button>
         </div>
@@ -235,7 +235,7 @@ export default function Create() {
                 </Select>
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="description">Description (optional)</Label>
               <Textarea

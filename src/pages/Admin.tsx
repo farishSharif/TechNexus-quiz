@@ -100,7 +100,7 @@ export default function Admin() {
         <div className="container py-20 text-center">
           <h1 className="font-display text-2xl font-bold mb-4">Sign in required</h1>
           <Link to="/auth">
-            <Button className="gradient-primary border-0">Sign In</Button>
+            <Button size="lg" className="font-bold text-lg">Sign In</Button>
           </Link>
         </div>
       </MainLayout>
@@ -144,8 +144,8 @@ export default function Admin() {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Users className="h-6 w-6 text-primary" />
+                  <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center border-b-4 border-primary/20">
+                    <Users className="h-8 w-8 text-primary" />
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Total Users</p>
@@ -154,12 +154,12 @@ export default function Admin() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-secondary/20 flex items-center justify-center">
-                    <BookOpen className="h-6 w-6 text-secondary-foreground" />
+                  <div className="w-16 h-16 rounded-2xl bg-secondary/20 flex items-center justify-center border-b-4 border-secondary/30">
+                    <BookOpen className="h-8 w-8 text-secondary-foreground" />
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Total Quizzes</p>
@@ -168,12 +168,12 @@ export default function Admin() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center">
-                    <BarChart3 className="h-6 w-6 text-accent-foreground" />
+                  <div className="w-16 h-16 rounded-2xl bg-accent/20 flex items-center justify-center border-b-4 border-accent/30">
+                    <BarChart3 className="h-8 w-8 text-accent-foreground" />
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Total Sessions</p>
@@ -182,12 +182,12 @@ export default function Admin() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-success/20 flex items-center justify-center">
-                    <TrendingUp className="h-6 w-6 text-success" />
+                  <div className="w-16 h-16 rounded-2xl bg-success/20 flex items-center justify-center border-b-4 border-success/30">
+                    <TrendingUp className="h-8 w-8 text-success" />
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Total Plays</p>
@@ -233,14 +233,13 @@ export default function Admin() {
                     </div>
                     <div className="space-y-2">
                       {completion.leaderboard.slice(0, 10).map((entry, index) => (
-                        <div 
+                        <div
                           key={index}
-                          className={`flex items-center justify-between p-3 rounded-lg ${
-                            index === 0 ? 'bg-secondary/20 border border-secondary/50' :
-                            index === 1 ? 'bg-muted' :
-                            index === 2 ? 'bg-accent/10' :
-                            'bg-muted/50'
-                          }`}
+                          className={`flex items-center justify-between p-3 rounded-lg ${index === 0 ? 'bg-secondary/20 border border-secondary/50' :
+                              index === 1 ? 'bg-muted' :
+                                index === 2 ? 'bg-accent/10' :
+                                  'bg-muted/50'
+                            }`}
                         >
                           <div className="flex items-center gap-3">
                             <span className="font-bold text-lg w-8">
@@ -275,7 +274,7 @@ export default function Admin() {
               <Badge variant="outline">Coming Soon</Badge>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

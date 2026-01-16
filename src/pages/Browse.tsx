@@ -19,19 +19,19 @@ export default function Browse() {
 
   const fetchQuizzes = async () => {
     setLoading(true);
-    
+
     let query = supabase
       .from('quizzes')
       .select('*, questions(count)')
       .eq('is_public', true)
       .order('play_count', { ascending: false });
-    
+
     if (selectedCategory) {
       query = query.eq('category', selectedCategory);
     }
-    
+
     const { data, error } = await query;
-    
+
     if (error) {
       console.error('Error fetching quizzes:', error);
     } else {
@@ -41,7 +41,7 @@ export default function Browse() {
       }));
       setQuizzes(quizzesWithCount);
     }
-    
+
     setLoading(false);
   };
 
@@ -54,9 +54,9 @@ export default function Browse() {
     <MainLayout>
       <div className="container py-8">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="font-display text-3xl md:text-4xl font-bold mb-2">
-            Browse <span className="text-gradient">Quizzes</span>
+        <div className="text-center mb-12">
+          <h1 className="font-display text-4xl md:text-5xl font-black mb-4 tracking-tight">
+            Browse <span className="text-primary underline decoration-wavy decoration-4 underline-offset-4">Quizzes</span>
           </h1>
           <p className="text-muted-foreground">
             Discover and play quizzes created by our community
@@ -95,10 +95,10 @@ export default function Browse() {
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredQuizzes.map((quiz) => (
-              <QuizCard 
-                key={quiz.id} 
-                quiz={quiz} 
-                questionCount={quiz.question_count} 
+              <QuizCard
+                key={quiz.id}
+                quiz={quiz}
+                questionCount={quiz.question_count}
               />
             ))}
           </div>

@@ -24,57 +24,57 @@ export function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-md">
-      <div className="container flex h-16 items-center justify-between">
+    <nav className="sticky top-0 z-50 w-full border-b-4 border-black/5 bg-background/80 backdrop-blur-md">
+      <div className="container flex h-20 items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 group">
-          <span className="font-display text-xl font-bold">
-            <span className="text-gradient">Tech Nexus</span>
-            <span className="text-muted-foreground ml-1">Quiz</span>
+          <span className="font-display text-2xl font-black tracking-tight transform group-hover:scale-105 transition-transform">
+            <span className="text-primary">Tech Nexus</span>
+            <span className="text-foreground ml-1">Quiz</span>
           </span>
         </Link>
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-4">
           <Link to="/browse">
-            <Button variant="ghost" className="font-semibold">
-              Browse Quizzes
+            <Button variant="ghost" className="font-bold text-lg hover:bg-gray-100/50">
+              Browse
             </Button>
           </Link>
           <Link to="/join">
-            <Button variant="ghost" className="font-semibold">
-              Join Quiz
+            <Button variant="ghost" className="font-bold text-lg hover:bg-gray-100/50">
+              Join
             </Button>
           </Link>
-          
+
           {user ? (
             <>
               <Link to="/create">
-                <Button className="btn-bounce gradient-primary border-0">
-                  <Plus className="h-4 w-4 mr-1" />
-                  Create Quiz
+                <Button className="font-bold">
+                  <Plus className="h-5 w-5 mr-1" />
+                  Create
                 </Button>
               </Link>
-              
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon" className="rounded-full">
+                  <Button variant="outline" size="icon" className="rounded-2xl border-2">
                     <User className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                <DropdownMenuContent align="end" className="w-48 rounded-xl border-2 shadow-xl">
+                  <DropdownMenuItem onClick={() => navigate('/dashboard')} className="font-bold cursor-pointer py-3">
                     <LayoutDashboard className="h-4 w-4 mr-2" />
                     Dashboard
                   </DropdownMenuItem>
                   {isAdmin && (
-                    <DropdownMenuItem onClick={() => navigate('/admin')}>
+                    <DropdownMenuItem onClick={() => navigate('/admin')} className="font-bold cursor-pointer py-3">
                       <Shield className="h-4 w-4 mr-2" />
                       Admin Panel
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+                  <DropdownMenuItem onClick={handleSignOut} className="text-destructive font-bold cursor-pointer py-3">
                     <LogOut className="h-4 w-4 mr-2" />
                     Sign Out
                   </DropdownMenuItem>
@@ -84,12 +84,12 @@ export function Navbar() {
           ) : (
             <>
               <Link to="/auth">
-                <Button variant="outline" className="font-semibold">
+                <Button variant="ghost" className="font-bold text-lg">
                   Sign In
                 </Button>
               </Link>
               <Link to="/auth?tab=signup">
-                <Button className="btn-bounce gradient-primary border-0 font-semibold">
+                <Button variant="action" className="font-black">
                   Get Started
                 </Button>
               </Link>
@@ -122,7 +122,7 @@ export function Navbar() {
                 Join Quiz
               </Button>
             </Link>
-            
+
             {user ? (
               <>
                 <Link to="/create" onClick={() => setMobileMenuOpen(false)}>

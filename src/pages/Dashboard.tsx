@@ -10,8 +10,8 @@ import { Quiz, CATEGORY_LABELS, CATEGORY_ICONS } from '@/types/quiz';
 import { generatePinCode, formatPinCode } from '@/lib/generatePin';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { 
-  Plus, Play, Edit, Trash2, Users, Copy, QrCode, 
+import {
+  Plus, Play, Edit, Trash2, Users, Copy, QrCode,
   Loader2, LayoutDashboard, BarChart3, Trophy, Clock
 } from 'lucide-react';
 import {
@@ -54,7 +54,7 @@ interface QuizCompletion {
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  
+
   const [quizzes, setQuizzes] = useState<(Quiz & { question_count: number })[]>([]);
   const [loading, setLoading] = useState(true);
   const [hostDialogOpen, setHostDialogOpen] = useState(false);
@@ -77,7 +77,7 @@ export default function Dashboard() {
       .select('*, questions(count)')
       .eq('creator_id', user!.id)
       .order('created_at', { ascending: false });
-    
+
     if (error) {
       console.error('Error fetching quizzes:', error);
     } else {
@@ -95,7 +95,7 @@ export default function Dashboard() {
       .from('quizzes')
       .delete()
       .eq('id', quizId);
-    
+
     if (error) {
       toast.error('Failed to delete quiz');
     } else {
@@ -112,7 +112,7 @@ export default function Dashboard() {
   const openLeaderboard = async (quizId: string) => {
     setLoadingLeaderboard(true);
     setLeaderboardDialogOpen(true);
-    
+
     const { data, error } = await supabase
       .from('quiz_completions')
       .select('*')
@@ -137,10 +137,10 @@ export default function Dashboard() {
 
   const createSession = async () => {
     if (!selectedQuiz || !user) return;
-    
+
     setCreatingSession(true);
     const pinCode = generatePinCode();
-    
+
     const { data: session, error } = await supabase
       .from('quiz_sessions')
       .insert({
@@ -152,13 +152,13 @@ export default function Dashboard() {
       })
       .select()
       .single();
-    
+
     if (error) {
       toast.error('Failed to create session');
       setCreatingSession(false);
       return;
     }
-    
+
     setHostDialogOpen(false);
     navigate(`/host/${session.id}`);
   };
@@ -199,8 +199,8 @@ export default function Dashboard() {
             <p className="text-muted-foreground mt-1">Manage your quizzes and sessions</p>
           </div>
           <Link to="/create">
-            <Button className="gradient-primary border-0 btn-bounce">
-              <Plus className="h-4 w-4 mr-2" />
+            <Button className="font-bold text-lg btn-3d-primary" size="lg">
+              <Plus className="h-5 w-5 mr-2" />
               Create New Quiz
             </Button>
           </Link>
@@ -246,8 +246,8 @@ export default function Dashboard() {
               <div className="text-center py-12">
                 <p className="text-muted-foreground mb-4">You haven't created any quizzes yet</p>
                 <Link to="/create">
-                  <Button className="gradient-primary border-0">
-                    <Plus className="h-4 w-4 mr-2" />
+                  <Button size="lg" className="font-bold">
+                    <Plus className="h-5 w-5 mr-2" />
                     Create Your First Quiz
                   </Button>
                 </Link>
@@ -255,9 +255,9 @@ export default function Dashboard() {
             ) : (
               <div className="space-y-4">
                 {quizzes.map((quiz) => (
-                  <div 
+                  <div
                     key={quiz.id}
-                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl border-2 border-b-4 border-gray-100 bg-white hover:border-primary/20 hover:shadow-md transition-all"
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center text-2xl">
@@ -274,11 +274,11 @@ export default function Dashboard() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-2 w-full sm:w-auto">
                       <Button
                         onClick={() => openHostDialog(quiz)}
-                        className="flex-1 sm:flex-none gradient-primary border-0"
+                        className="flex-1 sm:flex-none font-bold"
                       >
                         <Play className="h-4 w-4 mr-2" />
                         Host
@@ -310,7 +310,7 @@ export default function Dashboard() {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction 
+                            <AlertDialogAction
                               onClick={() => handleDelete(quiz.id)}
                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
@@ -357,13 +357,13 @@ export default function Dashboard() {
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                {sessionMode === 'live_hosted' 
+                {sessionMode === 'live_hosted'
                   ? 'You control the quiz progression. All players answer together.'
                   : 'Players progress through the quiz at their own pace.'}
               </p>
             </div>
-            <Button onClick={createSession} disabled={creatingSession} className="w-full gradient-primary border-0">
-              {creatingSession ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Play className="h-4 w-4 mr-2" />}
+            <Button onClick={createSession} disabled={creatingSession} className="w-full text-lg font-bold h-12" size="lg">
+              {creatingSession ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Play className="h-5 w-5 mr-2" />}
               Start Session
             </Button>
           </div>
@@ -398,14 +398,13 @@ export default function Dashboard() {
                 </div>
                 <div className="space-y-2">
                   {selectedCompletion.leaderboard.slice(0, 10).map((entry, index) => (
-                    <div 
+                    <div
                       key={index}
-                      className={`flex items-center justify-between p-3 rounded-lg ${
-                        index === 0 ? 'bg-secondary/20 border border-secondary/50' :
+                      className={`flex items-center justify-between p-3 rounded-lg ${index === 0 ? 'bg-secondary/20 border border-secondary/50' :
                         index === 1 ? 'bg-muted' :
-                        index === 2 ? 'bg-accent/10' :
-                        'bg-muted/50'
-                      }`}
+                          index === 2 ? 'bg-accent/10' :
+                            'bg-muted/50'
+                        }`}
                     >
                       <div className="flex items-center gap-3">
                         <span className="font-bold text-lg w-8">

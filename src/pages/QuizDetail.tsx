@@ -9,15 +9,15 @@ import { useAuth } from '@/hooks/useAuth';
 import { Quiz, CATEGORY_LABELS, CATEGORY_ICONS } from '@/types/quiz';
 import { generatePinCode } from '@/lib/generatePin';
 import { toast } from 'sonner';
-import { 
-  Play, Users, HelpCircle, ArrowLeft, Loader2, Clock 
+import {
+  Play, Users, HelpCircle, ArrowLeft, Loader2, Clock
 } from 'lucide-react';
 
 export default function QuizDetail() {
   const { quizId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [questionCount, setQuestionCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -135,7 +135,7 @@ export default function QuizDetail() {
             <h1 className="font-display text-2xl md:text-3xl font-bold mb-2">
               {quiz.title}
             </h1>
-            
+
             {quiz.description && (
               <p className="text-muted-foreground mb-6">
                 {quiz.description}
@@ -157,17 +157,18 @@ export default function QuizDetail() {
               </div>
             </div>
 
-            <Button 
-              onClick={handleStartQuiz} 
-              className="w-full gradient-primary border-0 h-12 text-lg"
+            <Button
+              onClick={handleStartQuiz}
+              className="w-full h-14 text-xl font-bold animate-pulse"
+              size="lg"
               disabled={starting || questionCount === 0}
             >
               {starting ? (
-                <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                <Loader2 className="h-6 w-6 animate-spin mr-2" />
               ) : (
-                <Play className="h-5 w-5 mr-2" />
+                <Play className="h-6 w-6 mr-2" />
               )}
-              {user ? 'Host This Quiz' : 'Sign In to Host'}
+              {user ? 'Host This Quiz 🎮' : 'Sign In to Host'}
             </Button>
           </CardContent>
         </Card>
