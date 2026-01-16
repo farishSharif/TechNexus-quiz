@@ -162,8 +162,11 @@ export default function Join() {
                     {isLoading ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : <Play className="h-6 w-6 mr-2" />}
                     Find Quiz
                   </Button>
-                  <div className="h-16 w-16">
-                    <QRScanner onScan={handleQRScan} />
+                  <div className="h-16">
+                    <QRScanner
+                      onScan={handleQRScan}
+                      className="h-full px-6 text-lg font-bold border-4 border-gray-100 hover:border-gray-300 transition-colors"
+                    />
                   </div>
                 </div>
               </form>

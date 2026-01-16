@@ -385,25 +385,8 @@ export default function Play() {
             {/* Show leaderboard after answering - no correct/wrong feedback */}
             {hasAnswered ? (
               <div className="space-y-4">
-                {/* Answer Submitted Card - No feedback shown */}
-                {/* Answer Submitted Card */}
-                <Card className="border-4 border-primary/20 bg-primary/5 overflow-hidden relative">
-                  <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
-                  <CardContent className="py-12 text-center relative z-10">
-                    <div className="mb-6 inline-block p-4 rounded-full bg-primary/10 animate-pulse">
-                      <Loader2 className="h-12 w-12 text-primary animate-spin" />
-                    </div>
-                    <h3 className="font-display text-3xl font-black mb-2 text-primary">
-                      Answer Locked In! 🔒
-                    </h3>
-                    <p className="text-xl text-muted-foreground font-medium">
-                      Waiting for other players...
-                    </p>
-                  </CardContent>
-                </Card>
-
-                {/* Live Leaderboard - Only shown when Host enables it */}
-                {session?.show_leaderboard && (
+                {session?.show_leaderboard ? (
+                  /* Live Leaderboard - Only shown when Host enables it */
                   <Card className="mb-6 animate-in fade-in slide-in-from-bottom duration-700">
                     <CardContent className="py-4">
                       <h3 className="font-display font-bold mb-2 flex items-center gap-2">
@@ -474,6 +457,23 @@ export default function Play() {
                           );
                         })()}
                       </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  /* Answer Submitted Card - No feedback shown */
+                  /* Answer Submitted Card */
+                  <Card className="border-4 border-primary/20 bg-primary/5 overflow-hidden relative">
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
+                    <CardContent className="py-12 text-center relative z-10">
+                      <div className="mb-6 inline-block p-4 rounded-full bg-primary/10 animate-pulse">
+                        <Loader2 className="h-12 w-12 text-primary animate-spin" />
+                      </div>
+                      <h3 className="font-display text-3xl font-black mb-2 text-primary">
+                        {(timeLeft === 0) ? "Time's Up! ⏰" : 'Answer Locked In! 🔒'}
+                      </h3>
+                      <p className="text-xl text-muted-foreground font-medium">
+                        {(timeLeft === 0) ? 'Revealing scores...' : 'Waiting for other players...'}
+                      </p>
                     </CardContent>
                   </Card>
                 )}
@@ -563,6 +563,6 @@ export default function Play() {
           </div>
         )}
       </div>
-    </div>
+    </div >
   );
 }

@@ -6,9 +6,10 @@ import { ScanLine, Camera, X } from 'lucide-react';
 
 interface QRScannerProps {
   onScan: (result: string) => void;
+  className?: string; // Allow custom styling
 }
 
-export function QRScanner({ onScan }: QRScannerProps) {
+export function QRScanner({ onScan, className }: QRScannerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -17,11 +18,11 @@ export function QRScanner({ onScan }: QRScannerProps) {
 
   const startScanning = async () => {
     setError(null);
-    
+
     try {
       const scanner = new Html5Qrcode(scannerContainerId);
       scannerRef.current = scanner;
-      
+
       await scanner.start(
         { facingMode: 'environment' },
         {
@@ -47,7 +48,7 @@ export function QRScanner({ onScan }: QRScannerProps) {
           } catch {
             // Not a URL, use as-is (might be just a PIN)
           }
-          
+
           stopScanning();
           setIsOpen(false);
           onScan(pin);
@@ -56,7 +57,7 @@ export function QRScanner({ onScan }: QRScannerProps) {
           // QR code not detected in frame - ignore
         }
       );
-      
+
       setIsScanning(true);
     } catch (err) {
       console.error('Failed to start scanner:', err);
@@ -86,7 +87,7 @@ export function QRScanner({ onScan }: QRScannerProps) {
     } else {
       stopScanning();
     }
-    
+
     return () => {
       stopScanning();
     };
@@ -95,7 +96,7 @@ export function QRScanner({ onScan }: QRScannerProps) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2">
+        <Button variant="outline" className={`gap-2 ${className || ''}`}>
           <ScanLine className="h-4 w-4" />
           Scan QR
         </Button>
@@ -107,34 +108,34 @@ export function QRScanner({ onScan }: QRScannerProps) {
             Scan QR Code
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4">
-          <div 
-            id={scannerContainerId} 
+          <div
+            id={scannerContainerId}
             className="w-full aspect-square bg-muted rounded-lg overflow-hidden"
           />
-          
+
           {error && (
             <div className="text-sm text-destructive text-center p-3 bg-destructive/10 rounded-lg">
               {error}
             </div>
           )}
-          
+
           {!isScanning && !error && (
             <div className="text-sm text-muted-foreground text-center">
               Starting camera...
             </div>
           )}
-          
+
           {isScanning && (
             <p className="text-sm text-muted-foreground text-center">
               Point your camera at the quiz QR code
             </p>
           )}
-          
-          <Button 
-            variant="outline" 
-            className="w-full" 
+
+          <Button
+            variant="outline"
+            className="w-full"
             onClick={() => setIsOpen(false)}
           >
             <X className="h-4 w-4 mr-2" />

@@ -276,7 +276,7 @@ export default function Host() {
               console.log('Auto-advancing to next question');
               nextQuestion();
             }, 6000); // 6s viewing time
-          }, 4000); // 4s viewing time for answer
+          }, 1500); // 1.5s viewing time for answer
 
           return 0;
         }
