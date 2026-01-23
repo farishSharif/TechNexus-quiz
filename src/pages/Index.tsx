@@ -38,7 +38,7 @@ export default function Index() {
           </div>
 
           <h1 className="font-display text-5xl md:text-7xl font-black tracking-tight mb-8 leading-tight drop-shadow-sm">
-            Ready to <span className="text-primary underline decoration-wavy decoration-4 underline-offset-8">Play</span> &
+            Ready to <span className="text-primary decoration-4 underline-offset-8">Play</span> &
             <br />
             <span className="text-secondary-foreground">Master New Skills?</span>
           </h1>

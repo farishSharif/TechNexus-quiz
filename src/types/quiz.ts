@@ -71,6 +71,9 @@ export interface QuizParticipant {
   current_streak: number;
   best_streak: number;
   joined_at: string;
+  last_answer_at?: string;
+  total_response_time_ms?: number;
+  rank?: number;
 }
 
 export interface QuizResponse {
