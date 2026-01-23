@@ -41,9 +41,9 @@ export function QuestionEditor({
       <CardContent className="p-4 sm:pt-6 sm:px-6">
         {/* Mobile-optimized header */}
         <div className="flex items-start gap-2 sm:gap-3">
-          <div className="flex items-center gap-1 sm:gap-2 text-muted-foreground shrink-0 pt-2">
-            <GripVertical className="h-4 w-4 sm:h-5 sm:w-5" />
-            <span className="font-bold text-base sm:text-lg">{index + 1}</span>
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0 pt-2">
+            <GripVertical className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+            <span className="font-bold text-base sm:text-lg text-primary">{index + 1}</span>
           </div>
           
           <div className="flex-1 min-w-0 space-y-4">
