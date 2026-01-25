@@ -146,6 +146,10 @@ export default function Play() {
 
     // Fetch all participants for leaderboard
     const { data: participantsData } = await supabase
+      .from('quiz_participants')
+      .select('*')
+      .eq('session_id', sessionId)
+      .order('total_score', { ascending: false });
       .rpc('get_session_leaderboard', { p_session_id: sessionId });
     setParticipants(participantsData as QuizParticipant[] || []);
 
@@ -180,7 +184,10 @@ export default function Play() {
         () => {
           // Refresh participants
           supabase
-            .rpc('get_session_leaderboard', { p_session_id: sessionId })
+            .from('quiz_participants')
+            .select('*')
+            .eq('session_id', sessionId)
+            .order('total_score', { ascending: false })
             .then(({ data }) => {
               if (data) setParticipants(data as QuizParticipant[]);
             });
@@ -257,14 +264,11 @@ export default function Play() {
           selected_answers: answers,
           is_correct: isCorrect,
           points_earned: pointsEarned,
-          response_time_ms: currentResponseTime
-        });
+          response_time_ms: (currentQuestion.time_limit - currentTimeLeft) * 1000        });
 
       // Update participant score
       const newScore = participant.total_score + pointsEarned;
       const newStreak = isCorrect ? ((participant.current_streak || 0) + 1) : 0;
-      const newTotalResponseTime = (participant.total_response_time_ms || 0) + currentResponseTime;
-      const now = new Date().toISOString();
 
       await supabase
         .from('quiz_participants')
@@ -272,8 +276,6 @@ export default function Play() {
           total_score: newScore,
           current_streak: newStreak,
           best_streak: Math.max(newStreak, (participant.best_streak || 0)),
-          last_answer_at: now,
-          total_response_time_ms: newTotalResponseTime
         })
         .eq('id', participant.id);
 
@@ -398,7 +400,8 @@ export default function Play() {
                       <div className="space-y-2">
                         {(() => {
                           // Participants are already sorted by backend
-                          const sorted = participants;
+                          const sorted = participants;// Sort participants by score descending
+                          const sorted = [...participants].sort((a, b) => (b.total_score || 0) - (a.total_score || 0));
                           // Find current user's rank (1-based)
                           const userIndex = sorted.findIndex(p => p.id === participant.id);
                           // Top 10

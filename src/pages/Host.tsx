@@ -166,8 +166,10 @@ export default function Host() {
 
     // Fetch participants
     const { data: participantsData } = await supabase
-      .rpc('get_session_leaderboard', { p_session_id: sessionId });
-
+      .from('quiz_participants')
+      .select('*')
+      .eq('session_id', sessionId)
+      .order('total_score', { ascending: false });
     setParticipants(participantsData as QuizParticipant[] || []);
     setLoading(false);
   };
@@ -183,13 +185,15 @@ export default function Host() {
           table: 'quiz_participants',
           filter: `session_id=eq.${sessionId}`
         },
-        () => {
-          // Re-fetch leaderboard to ensure consistent backend sorting
-          supabase
-            .rpc('get_session_leaderboard', { p_session_id: sessionId })
-            .then(({ data }) => {
-              if (data) setParticipants(data as QuizParticipant[]);
-            });
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setParticipants(prev => [...prev, payload.new as QuizParticipant]);
+          } else if (payload.eventType === 'UPDATE') {
+            setParticipants(prev =>
+              prev.map(p => p.id === payload.new.id ? payload.new as QuizParticipant : p)
+                .sort((a, b) => b.total_score - a.total_score)
+            );
+          }
         }
       )
       .subscribe();
