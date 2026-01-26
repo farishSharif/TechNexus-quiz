@@ -283,8 +283,6 @@ export default function Play() {
         ...participant,
         total_score: newScore,
         current_streak: newStreak,
-        total_response_time_ms: newTotalResponseTime,
-        last_answer_at: now
       });
 
       setShowResult(true);
