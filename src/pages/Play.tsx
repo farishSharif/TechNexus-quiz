@@ -150,7 +150,6 @@ export default function Play() {
       .select('*')
       .eq('session_id', sessionId)
       .order('total_score', { ascending: false });
-      .rpc('get_session_leaderboard', { p_session_id: sessionId });
     setParticipants(participantsData as QuizParticipant[] || []);
 
     setLoading(false);
@@ -397,8 +396,7 @@ export default function Play() {
                       </h3>
                       <div className="space-y-2">
                         {(() => {
-                          // Participants are already sorted by backend
-                          const sorted = participants;// Sort participants by score descending
+                          // Sort participants by score descending
                           const sorted = [...participants].sort((a, b) => (b.total_score || 0) - (a.total_score || 0));
                           // Find current user's rank (1-based)
                           const userIndex = sorted.findIndex(p => p.id === participant.id);
