@@ -149,7 +149,8 @@ export default function Play() {
       .from('quiz_participants')
       .select('*')
       .eq('session_id', sessionId)
-      .order('total_score', { ascending: false });
+      .order('total_score', { ascending: false })
+      .order('joined_at', { ascending: true });
     setParticipants(participantsData as QuizParticipant[] || []);
 
     setLoading(false);
@@ -187,6 +188,7 @@ export default function Play() {
             .select('*')
             .eq('session_id', sessionId)
             .order('total_score', { ascending: false })
+            .order('joined_at', { ascending: true })
             .then(({ data }) => {
               if (data) setParticipants(data as QuizParticipant[]);
             });
@@ -263,7 +265,8 @@ export default function Play() {
           selected_answers: answers,
           is_correct: isCorrect,
           points_earned: pointsEarned,
-          response_time_ms: (currentQuestion.time_limit - currentTimeLeft) * 1000        });
+          response_time_ms: (currentQuestion.time_limit - currentTimeLeft) * 1000
+        });
 
       // Update participant score
       const newScore = participant.total_score + pointsEarned;
@@ -396,8 +399,13 @@ export default function Play() {
                       </h3>
                       <div className="space-y-2">
                         {(() => {
-                          // Sort participants by score descending
-                          const sorted = [...participants].sort((a, b) => (b.total_score || 0) - (a.total_score || 0));
+                          // Sort participants by score descending, then by joined_at ascending as tie-breaker
+                          const sorted = [...participants].sort((a, b) => {
+                            if (b.total_score !== a.total_score) {
+                              return (b.total_score || 0) - (a.total_score || 0);
+                            }
+                            return new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime();
+                          });
                           // Find current user's rank (1-based)
                           const userIndex = sorted.findIndex(p => p.id === participant.id);
                           // Top 10

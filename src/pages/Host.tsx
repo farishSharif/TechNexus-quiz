@@ -169,7 +169,8 @@ export default function Host() {
       .from('quiz_participants')
       .select('*')
       .eq('session_id', sessionId)
-      .order('total_score', { ascending: false });
+      .order('total_score', { ascending: false })
+      .order('joined_at', { ascending: true });
     setParticipants(participantsData as QuizParticipant[] || []);
     setLoading(false);
   };
@@ -191,7 +192,12 @@ export default function Host() {
           } else if (payload.eventType === 'UPDATE') {
             setParticipants(prev =>
               prev.map(p => p.id === payload.new.id ? payload.new as QuizParticipant : p)
-                .sort((a, b) => b.total_score - a.total_score)
+                .sort((a, b) => {
+                  if (b.total_score !== a.total_score) {
+                    return b.total_score - a.total_score;
+                  }
+                  return new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime();
+                })
             );
           }
         }
