@@ -220,7 +220,7 @@ export default function Join() {
                       onClick={regenerateAvatars}
                       className="text-xs"
                     >
-                      🎲 Randomize Options
+                      More Avatar's 🎲
                     </Button>
                   </div>
                 </div>
