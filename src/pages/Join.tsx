@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Play, QrCode, Loader2 } from 'lucide-react';
+import { Play, QrCode, Loader2, Search } from 'lucide-react';
 import { AVATAR_EMOJIS, CHARACTER_IMAGES } from '@/types/quiz';
 import { QRScanner } from '@/components/quiz/QRScanner';
 import { AvatarDisplay } from '@/components/ui/AvatarDisplay';
@@ -28,6 +28,7 @@ export default function Join() {
   const [selectedEmoji, setSelectedEmoji] = useState('Tanjiro Kamado');
   const [isLoading, setIsLoading] = useState(false);
   const [sessionFound, setSessionFound] = useState(!!initialPin);
+  const [avatarSearch, setAvatarSearch] = useState('');
   const navigate = useNavigate();
 
   const [avatarSeeds, setAvatarSeeds] = useState(() => getRandomAvatars(15));
@@ -197,9 +198,22 @@ export default function Join() {
                 </div>
 
                 <div className="space-y-4">
-                  <p className="text-lg font-black text-center text-muted-foreground">Pick your Avatar</p>
-                  <div className="grid grid-cols-4 sm:grid-cols-5 gap-3 bg-muted/30 p-4 rounded-2xl border-2 border-dashed border-border/50 justify-items-center">
-                    {avatarSeeds.map((seed) => (
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="text"
+                      placeholder="Search characters (e.g. Gojo)"
+                      value={avatarSearch}
+                      onChange={(e) => setAvatarSearch(e.target.value)}
+                      className="pl-10 h-10 rounded-xl border-2 border-border/50 focus:border-primary"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-4 sm:grid-cols-5 gap-3 bg-muted/30 p-4 rounded-2xl border-2 border-dashed border-border/50 justify-items-center max-h-[250px] overflow-y-auto custom-scrollbar">
+                    {(avatarSearch.trim()
+                      ? ANIME_CHARACTERS.filter(name => name.toLowerCase().includes(avatarSearch.toLowerCase()))
+                      : avatarSeeds
+                    ).map((seed) => (
                       <button
                         key={seed}
                         type="button"
@@ -208,6 +222,7 @@ export default function Join() {
                           ? 'ring-4 ring-primary shadow-xl scale-110 bg-card'
                           : 'hover:bg-card hover:shadow-md opacity-80 hover:opacity-100'
                           }`}
+                        title={seed}
                       >
                         <AvatarDisplay
                           seed={seed}
@@ -215,17 +230,22 @@ export default function Join() {
                         />
                       </button>
                     ))}
+                    {(avatarSearch.trim() && ANIME_CHARACTERS.filter(name => name.toLowerCase().includes(avatarSearch.toLowerCase())).length === 0) && (
+                      <p className="col-span-full text-sm text-muted-foreground py-4">No characters found 🔍</p>
+                    )}
                   </div>
-                  <div className="flex justify-center">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={regenerateAvatars}
-                      className="text-xs"
-                    >
-                      More Avatar's 🎲
-                    </Button>
-                  </div>
+                  {!avatarSearch.trim() && (
+                    <div className="flex justify-center">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={regenerateAvatars}
+                        className="text-xs"
+                      >
+                        More Avatar's 🎲
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 <Button type="submit" size="xl" variant="success" className="w-full text-2xl h-12" disabled={isLoading}>

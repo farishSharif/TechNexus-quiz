@@ -164,7 +164,21 @@ export const CHARACTER_IMAGES: Record<string, string> = {
   "Hange Zoe": "https://cdn.myanimelist.net/images/characters/15/208637.webp",
   "Reiner Braun": "https://cdn.myanimelist.net/images/characters/16/206489.webp",
   "Annie Leonhart": "https://cdn.myanimelist.net/images/characters/9/206357.webp",
-  "Zeke Yeager": "https://cdn.myanimelist.net/images/characters/12/602645.webp"
+  "Zeke Yeager": "https://cdn.myanimelist.net/images/characters/12/602645.webp",
+  "Naruto Uzumaki": "https://cdn.myanimelist.net/images/characters/9/131317.webp",
+  "Sasuke Uchiha": "https://cdn.myanimelist.net/images/characters/9/131311.webp",
+  "Kakashi Hatake": "https://cdn.myanimelist.net/images/characters/7/284129.webp",
+  "Itachi Uchiha": "https://cdn.myanimelist.net/images/characters/2/115165.webp",
+  "Luffy": "https://cdn.myanimelist.net/images/characters/9/310307.webp",
+  "Zoro": "https://cdn.myanimelist.net/images/characters/3/100534.webp",
+  "Nami": "https://cdn.myanimelist.net/images/characters/2/263249.webp",
+  "Sanji": "https://cdn.myanimelist.net/images/characters/5/133549.webp",
+  "Sung Jin-Woo": "https://cdn.myanimelist.net/images/characters/6/533318.webp",
+  "Ichigo Kurosaki": "https://cdn.myanimelist.net/images/characters/10/117369.webp",
+  "Rukia Kuchiki": "https://cdn.myanimelist.net/images/characters/3/113331.webp",
+  "Saitama": "https://cdn.myanimelist.net/images/characters/11/294350.webp",
+  "Genos": "https://cdn.myanimelist.net/images/characters/2/294247.webp",
+  "Rimuru Tempest": "https://cdn.myanimelist.net/images/characters/10/371661.webp"
 };
 
 export const AVATAR_EMOJIS = Object.keys(CHARACTER_IMAGES);
