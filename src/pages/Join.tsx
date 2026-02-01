@@ -8,9 +8,16 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Play, QrCode, Loader2 } from 'lucide-react';
-import { AVATAR_EMOJIS } from '@/types/quiz';
+import { AVATAR_EMOJIS, CHARACTER_IMAGES } from '@/types/quiz';
 import { QRScanner } from '@/components/quiz/QRScanner';
 import { AvatarDisplay } from '@/components/ui/AvatarDisplay';
+
+const ANIME_CHARACTERS = AVATAR_EMOJIS;
+
+const getRandomAvatars = (count: number) => {
+  const shuffled = [...ANIME_CHARACTERS].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, count);
+};
 
 export default function Join() {
   const [searchParams] = useSearchParams();
@@ -18,22 +25,15 @@ export default function Join() {
 
   const [pinCode, setPinCode] = useState(initialPin);
   const [nickname, setNickname] = useState('');
-  const [selectedEmoji, setSelectedEmoji] = useState('Max');
+  const [selectedEmoji, setSelectedEmoji] = useState('Tanjiro Kamado');
   const [isLoading, setIsLoading] = useState(false);
   const [sessionFound, setSessionFound] = useState(!!initialPin);
   const navigate = useNavigate();
 
-  const [avatarSeeds, setAvatarSeeds] = useState([
-    'Max', 'Bella', 'Charlie', 'Luna', 'Cooper',
-    'Daisy', 'Rocky', 'Zoe', 'Bear', 'Molly',
-    'Duke', 'Lola', 'Leo', 'Ruby', 'Tucker'
-  ]);
+  const [avatarSeeds, setAvatarSeeds] = useState(() => getRandomAvatars(15));
 
   const regenerateAvatars = () => {
-    const newSeeds = Array.from({ length: 15 }, () =>
-      Math.random().toString(36).substring(2, 8)
-    );
-    setAvatarSeeds(newSeeds);
+    setAvatarSeeds(getRandomAvatars(15));
   };
 
   const handleFindSession = async (e: React.FormEvent) => {
@@ -209,7 +209,10 @@ export default function Join() {
                           : 'hover:bg-card hover:shadow-md opacity-80 hover:opacity-100'
                           }`}
                       >
-                        <AvatarDisplay seed={seed} size="md" />
+                        <AvatarDisplay
+                          seed={seed}
+                          size="md"
+                        />
                       </button>
                     ))}
                   </div>

@@ -1,17 +1,17 @@
 
 import { useMemo } from 'react';
+import { CHARACTER_IMAGES } from '@/types/quiz';
 
 interface AvatarDisplayProps {
     seed: string;
+    imageUrl?: string;
     className?: string;
     size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 }
 
-export function AvatarDisplay({ seed, className = "", size = 'md' }: AvatarDisplayProps) {
+export function AvatarDisplay({ seed, imageUrl, className = "", size = 'md' }: AvatarDisplayProps) {
     const isEmoji = useMemo(() => {
         // Basic check if the string is just an emoji (short length)
-        // Most single emojis are 2 chars (surrogate pairs), some are more.
-        // Seeds for avatars will likely be longer (names like "Felix", "Bandit", etc.)
         return seed && seed.length <= 4 && /\p{Emoji}/u.test(seed);
     }, [seed]);
 
@@ -31,19 +31,16 @@ export function AvatarDisplay({ seed, className = "", size = 'md' }: AvatarDispl
         );
     }
 
-    // Use DiceBear Notion style or Bottts or Fun Emoji
-    // 'notionists' and 'avataaars' are good. Let's use 'notionists' for a sketchy fun look, or 'bottts' for robots.
-    // User said "avatars more", let's use 'adventurer' or 'fun-emoji'.
-    // 'adventurer' is very expressive.
-    // User requested "carton" and "colorful" avatars. 'adventurer' is perfect.
-    const avatarUrl = `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(seed)}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffdfbf,ffd5dc`;
+    // Use provided image URL, or check shared character mapping, or fall back to DiceBear Lorelei
+    const finalImageUrl = imageUrl || CHARACTER_IMAGES[seed] || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(seed)}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffdfbf,ffd5dc,ffadad,ffd6a5,fdffb6,caffbf,9bf6ff,a0c4ff,bdb2ff,ffc6ff`;
 
     return (
         <div className={`overflow-hidden rounded-full bg-white border-2 border-black/5 ${sizeClasses[size].split(' ')[0]} ${sizeClasses[size].split(' ')[1]} ${className}`}>
             <img
-                src={avatarUrl}
-                alt="Avatar"
+                src={finalImageUrl}
+                alt={seed}
                 className="w-full h-full object-cover"
+                loading="lazy"
             />
         </div>
     );
