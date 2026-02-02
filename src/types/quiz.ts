@@ -17,7 +17,7 @@ export type QuestionType =
 
 export type SessionMode = 'live_hosted' | 'self_paced';
 
-export type SessionStatus = 'waiting' | 'active' | 'completed' | 'cancelled';
+export type SessionStatus = 'waiting' | 'active' | 'paused' | 'completed' | 'cancelled';
 
 export interface Quiz {
   id: string;

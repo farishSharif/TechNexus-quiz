@@ -10,6 +10,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Shield, Users, BookOpen, TrendingUp, BarChart3, Trophy, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 
+import { AvatarDisplay } from '@/components/ui/AvatarDisplay';
+
 interface Stats {
   totalUsers: number;
   totalQuizzes: number;
@@ -231,23 +233,40 @@ export default function Admin() {
                         </div>
                       </div>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {completion.leaderboard.slice(0, 10).map((entry, index) => (
                         <div
                           key={index}
-                          className={`flex items-center justify-between p-3 rounded-lg ${index === 0 ? 'bg-secondary/20 border border-secondary/50' :
-                              index === 1 ? 'bg-muted' :
-                                index === 2 ? 'bg-accent/10' :
-                                  'bg-muted/50'
+                          className={`flex items-center justify-between p-4 rounded-xl border-b-4 transition-all hover:scale-[1.01] ${index === 0
+                            ? 'bg-yellow-100/50 dark:bg-yellow-500/10 border-yellow-400/50'
+                            : index === 1
+                              ? 'bg-slate-100/50 dark:bg-slate-400/10 border-slate-300/50'
+                              : index === 2
+                                ? 'bg-orange-100/50 dark:bg-orange-400/10 border-orange-300/50'
+                                : 'bg-muted/30 border-border/50'
                             }`}
                         >
-                          <div className="flex items-center gap-3">
-                            <span className="font-bold text-lg w-8">
-                              {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`}
-                            </span>
-                            <span>{entry.avatar_emoji} {entry.nickname}</span>
+                          <div className="flex items-center gap-4">
+                            <div className={`flex items-center justify-center w-8 h-8 rounded-full font-black text-sm ${index === 0 ? 'bg-yellow-400 text-yellow-900' :
+                              index === 1 ? 'bg-slate-300 text-slate-800' :
+                                index === 2 ? 'bg-orange-300 text-orange-900' :
+                                  'bg-background/50'
+                              }`}>
+                              {index + 1}
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <AvatarDisplay seed={entry.avatar_emoji} size="sm" />
+                              <div className="flex flex-col">
+                                <span className="font-bold leading-tight">{entry.nickname}</span>
+                                {entry.best_streak > 2 && (
+                                  <span className="text-[10px] font-black text-success uppercase">
+                                    🔥 {entry.best_streak} Max Streak
+                                  </span>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                          <span className="font-bold text-primary">{entry.total_score} pts</span>
+                          <span className="font-black text-xl text-primary">{entry.total_score} pts</span>
                         </div>
                       ))}
                     </div>

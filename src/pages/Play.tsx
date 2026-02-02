@@ -68,17 +68,17 @@ export default function Play() {
 
   // Timer effect - only runs when timeLeft is set and not answered
   useEffect(() => {
-    if (session?.status === 'active' && !hasAnswered && timeLeft !== null && timeLeft > 0) {
-      const timer = setInterval(() => {
-        setTimeLeft(prev => {
-          if (prev === null || prev <= 1) {
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      return () => clearInterval(timer);
-    }
+    if (session?.status !== 'active' || hasAnswered || timeLeft === null || timeLeft <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev === null || prev <= 1) {
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
   }, [session?.status, hasAnswered, timeLeft]);
 
   // Handle time up separately to avoid closure issues
@@ -369,7 +369,7 @@ export default function Play() {
         )}
 
         {/* Active Quiz */}
-        {session.status === 'active' && currentQuestion && (
+        {(session.status === 'active' || session.status === 'paused') && currentQuestion && (
           <div className="max-w-2xl mx-auto">
             {/* Timer & Progress */}
             <div className="mb-6">

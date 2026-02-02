@@ -8,11 +8,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Quiz, CATEGORY_LABELS, CATEGORY_ICONS } from '@/types/quiz';
 import { generatePinCode, formatPinCode } from '@/lib/generatePin';
+import { generateQuizPDF } from '@/lib/generateQuizPDF';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import {
   Plus, Play, Edit, Trash2, Users, Copy, QrCode,
-  Loader2, LayoutDashboard, BarChart3, Trophy, Clock
+  Loader2, LayoutDashboard, BarChart3, Trophy, Clock, Download
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -31,6 +32,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { AvatarDisplay } from '@/components/ui/AvatarDisplay';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 
@@ -45,6 +48,7 @@ interface LeaderboardEntry {
 interface QuizCompletion {
   id: string;
   quiz_id: string;
+  session_id: string;
   quiz_title: string;
   completed_at: string;
   participant_count: number;
@@ -64,6 +68,8 @@ export default function Dashboard() {
   const [leaderboardDialogOpen, setLeaderboardDialogOpen] = useState(false);
   const [selectedCompletion, setSelectedCompletion] = useState<QuizCompletion | null>(null);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
+  const [downloadingPDF, setDownloadingPDF] = useState(false);
+  const [selectedQuizForLeaderboard, setSelectedQuizForLeaderboard] = useState<Quiz | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -125,14 +131,16 @@ export default function Dashboard() {
     setHostDialogOpen(true);
   };
 
-  const openLeaderboard = async (quizId: string) => {
+  const openLeaderboard = async (quiz: Quiz) => {
+    setSelectedQuizForLeaderboard(quiz);
     setLoadingLeaderboard(true);
     setLeaderboardDialogOpen(true);
 
     const { data, error } = await supabase
       .from('quiz_completions')
       .select('*')
-      .eq('quiz_id', quizId)
+      .eq('quiz_id', quiz.id)
+      .eq('host_id', user!.id) // Ensure we only see results from THIS host
       .order('completed_at', { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -149,6 +157,78 @@ export default function Dashboard() {
       setSelectedCompletion(null);
     }
     setLoadingLeaderboard(false);
+  };
+  const downloadPDF = async () => {
+    if (!selectedCompletion) return;
+
+    setDownloadingPDF(true);
+
+    try {
+      // Fetch questions for the quiz
+      const { data: questions, error: questionsError } = await supabase
+        .from('questions')
+        .select('*')
+        .eq('quiz_id', selectedCompletion.quiz_id)
+        .order('order_index', { ascending: true });
+
+      if (questionsError) throw questionsError;
+
+      // Fetch participants for the session
+      const { data: participants, error: participantsError } = await supabase
+        .from('quiz_participants')
+        .select('*')
+        .eq('session_id', selectedCompletion.session_id)
+        .order('total_score', { ascending: false });
+
+      if (participantsError) throw participantsError;
+
+      // Fetch responses for the session
+      const { data: responses, error: responsesError } = await supabase
+        .from('quiz_responses')
+        .select('*')
+        .eq('session_id', selectedCompletion.session_id);
+
+      if (responsesError) throw responsesError;
+
+      // Generate PDF
+      generateQuizPDF({
+        quizTitle: selectedCompletion.quiz_title,
+        completedAt: selectedCompletion.completed_at,
+        participantCount: selectedCompletion.participant_count,
+        questions: questions.map(q => ({
+          id: q.id,
+          question_text: q.question_text,
+          question_type: q.question_type,
+          options: q.options as string[],
+          correct_answers: q.correct_answers as string[],
+          points: q.points,
+          time_limit: q.time_limit,
+          order_index: q.order_index
+        })),
+        participants: participants.map(p => ({
+          id: p.id,
+          nickname: p.nickname,
+          avatar_emoji: p.avatar_emoji || '😀',
+          total_score: p.total_score,
+          best_streak: p.best_streak
+        })),
+        responses: responses.map(r => ({
+          participant_id: r.participant_id,
+          question_id: r.question_id,
+          selected_answers: r.selected_answers as string[],
+          is_correct: r.is_correct,
+          points_earned: r.points_earned,
+          response_time_ms: r.response_time_ms
+        }))
+      });
+
+      toast.success('PDF downloaded successfully');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Failed to generate PDF');
+    } finally {
+      setDownloadingPDF(false);
+    }
   };
 
   const createSession = async () => {
@@ -317,7 +397,7 @@ export default function Dashboard() {
                     </Link>
                     <Button
                       variant="outline"
-                      onClick={() => openLeaderboard(quiz.id)}
+                      onClick={() => openLeaderboard(quiz)}
                       title="View Leaderboard"
                       className="flex-1 sm:flex-none"
                     >
@@ -399,56 +479,108 @@ export default function Dashboard() {
 
       {/* Leaderboard Dialog */}
       <Dialog open={leaderboardDialogOpen} onOpenChange={setLeaderboardDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-secondary" />
-              Quiz Leaderboard
+        <DialogContent className="max-w-md bg-card dark:bg-black/95 border-border dark:border-white/10 backdrop-blur-xl h-[80vh] flex flex-col p-0 overflow-hidden">
+          <DialogHeader className="p-6 pb-2">
+            <DialogTitle className="flex items-center gap-2 text-2xl font-black">
+              <Trophy className="h-6 w-6 text-yellow-500 animate-bounce-subtle" />
+              {selectedQuizForLeaderboard?.title}
             </DialogTitle>
           </DialogHeader>
-          <div className="py-4">
+          <div className="flex-1 flex flex-col min-h-0">
             {loadingLeaderboard ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) : selectedCompletion ? (
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-4 w-4" />
-                    {format(new Date(selectedCompletion.completed_at), 'MMM d, yyyy h:mm a')}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Users className="h-4 w-4" />
-                    {selectedCompletion.participant_count} players
-                  </span>
+              <div className="flex flex-col h-full">
+                <div className="px-6 mb-4">
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50 text-sm">
+                    <span className="flex items-center gap-2 font-bold">
+                      <Clock className="h-4 w-4 text-primary" />
+                      {format(new Date(selectedCompletion.completed_at), 'MMM d, h:mm a')}
+                    </span>
+                    <span className="flex items-center gap-2 font-bold">
+                      <Users className="h-4 w-4 text-primary" />
+                      {selectedCompletion.participant_count} players
+                    </span>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  {selectedCompletion.leaderboard.slice(0, 10).map((entry, index) => (
-                    <div
-                      key={index}
-                      className={`flex items-center justify-between p-3 rounded-lg ${index === 0 ? 'bg-secondary/20 border border-secondary/50' :
-                        index === 1 ? 'bg-muted' :
-                          index === 2 ? 'bg-accent/10' :
-                            'bg-muted/50'
-                        }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="font-bold text-lg w-8">
-                          {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`}
-                        </span>
-                        <span>{entry.avatar_emoji} {entry.nickname}</span>
+
+                <ScrollArea className="flex-1 px-6">
+                  <div className="space-y-3 pb-6">
+                    {selectedCompletion.leaderboard.slice(0, 50).map((entry, index) => (
+                      <div
+                        key={index}
+                        className={`flex items-center justify-between p-4 rounded-xl border-b-4 transition-all hover:scale-[1.02] ${index === 0
+                          ? 'bg-yellow-100/50 dark:bg-yellow-500/10 border-yellow-400/50 text-yellow-900 dark:text-yellow-100'
+                          : index === 1
+                            ? 'bg-slate-100/50 dark:bg-slate-400/10 border-slate-300/50'
+                            : index === 2
+                              ? 'bg-orange-100/50 dark:bg-orange-400/10 border-orange-300/50'
+                              : 'bg-muted/30 border-border/50'
+                          }`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className={`flex items-center justify-center w-8 h-8 rounded-full font-black text-sm ${index === 0 ? 'bg-yellow-400 text-yellow-900' :
+                            index === 1 ? 'bg-slate-300 text-slate-800' :
+                              index === 2 ? 'bg-orange-300 text-orange-900' :
+                                'bg-background/50'
+                            }`}>
+                            {index + 1}
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <AvatarDisplay seed={entry.avatar_emoji} size="sm" />
+                            <div className="flex flex-col">
+                              <span className="font-bold leading-tight">{entry.nickname}</span>
+                              {entry.best_streak > 2 && (
+                                <span className="text-[10px] font-black text-success uppercase">
+                                  🔥 {entry.best_streak} Max Streak
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <span className="font-black text-xl text-primary">{entry.total_score}</span>
                       </div>
-                      <span className="font-bold text-primary">{entry.total_score} pts</span>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                </ScrollArea>
+
+                <div className="p-6 pt-2 bg-card dark:bg-black/95 border-t border-border/50">
+                  <Button
+                    onClick={downloadPDF}
+                    disabled={downloadingPDF}
+                    className="w-full gradient-primary border-0 h-12 text-lg font-bold"
+                  >
+                    {downloadingPDF ? (
+                      <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                    ) : (
+                      <Download className="h-5 w-5 mr-2" />
+                    )}
+                    Download Full Report (PDF)
+                  </Button>
                 </div>
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <Trophy className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                <p>No leaderboard data yet.</p>
-                <p className="text-sm">Complete a quiz session to see results here.</p>
+              <div className="flex flex-col items-center justify-center h-full px-6 text-center space-y-4">
+                <div className="w-20 h-20 bg-muted/30 rounded-full flex items-center justify-center mx-auto">
+                  <Trophy className="h-10 w-10 text-muted-foreground opacity-20" />
+                </div>
+                <div>
+                  <p className="font-bold text-lg">No Results Yet</p>
+                  <p className="text-sm text-muted-foreground">Complete a host session to see the leaderboard here.</p>
+                </div>
+                <Button
+                  onClick={() => {
+                    setLeaderboardDialogOpen(false);
+                    if (selectedQuizForLeaderboard) openHostDialog(selectedQuizForLeaderboard);
+                  }}
+                  variant="outline"
+                  className="mt-4"
+                >
+                  <Play className="h-4 w-4 mr-2" />
+                  Host Now
+                </Button>
               </div>
             )}
           </div>

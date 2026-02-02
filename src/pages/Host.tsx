@@ -12,7 +12,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import {
   Play, Users, Copy, QrCode, Loader2,
   SkipForward, Square, Trophy, ArrowLeft,
-  ChevronRight, X, Eye, EyeOff, Clock
+  ChevronRight, X, Eye, EyeOff, Clock, Pause
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Link } from 'react-router-dom';
@@ -241,6 +241,38 @@ export default function Host() {
       setShowQRModal(false);
     }
   };
+  const pauseQuiz = async () => {
+    if (!session) return;
+
+    const { error } = await supabase
+      .from('quiz_sessions')
+      .update({ status: 'paused' })
+      .eq('id', session.id);
+
+    if (error) {
+      toast.error('Failed to pause quiz');
+    } else {
+      setSession({ ...session, status: 'paused' as any });
+      toast.success('Quiz paused');
+    }
+  };
+
+  const resumeQuiz = async () => {
+    if (!session) return;
+
+    const { error } = await supabase
+      .from('quiz_sessions')
+      .update({ status: 'active' })
+      .eq('id', session.id);
+
+    if (error) {
+      toast.error('Failed to resume quiz');
+    } else {
+      setSession({ ...session, status: 'active' });
+      toast.success('Quiz resumed');
+    }
+  };
+
 
   // Timer effect for auto-advancing questions
   useEffect(() => {
@@ -339,18 +371,32 @@ export default function Host() {
         .update({ play_count: quiz.play_count + 1 })
         .eq('id', quiz.id);
 
-      // Delete ALL previous completion records for this quiz (keep only latest)
+      // Fetch FINAL participants from DB to ensure we have the absolute latest scores
+      const { data: finalParticipants, error: fetchError } = await supabase
+        .from('quiz_participants')
+        .select('*')
+        .eq('session_id', session.id)
+        .order('total_score', { ascending: false })
+        .order('joined_at', { ascending: true });
+
+      if (fetchError) {
+        console.error('Failed to fetch final participants:', fetchError);
+        return;
+      }
+
+      // Delete ALL previous completion records for THIS host and quiz (keep only latest)
       const { error: deleteError } = await supabase
         .from('quiz_completions')
         .delete()
-        .eq('quiz_id', quiz.id);
+        .eq('quiz_id', quiz.id)
+        .eq('host_id', user.id);
 
       if (deleteError) {
-        console.log('No previous records to delete or delete error:', deleteError);
+        console.log('Error deleting previous records:', deleteError);
       }
 
       // Save new completion record
-      const leaderboardData = participants.map((p, index) => ({
+      const leaderboardData = (finalParticipants || []).map((p, index) => ({
         rank: index + 1,
         nickname: p.nickname,
         avatar_emoji: p.avatar_emoji,
@@ -365,7 +411,7 @@ export default function Host() {
           quiz_title: quiz.title,
           session_id: session.id,
           host_id: user.id,
-          participant_count: participants.length,
+          participant_count: (finalParticipants || []).length,
           leaderboard: leaderboardData
         });
 
@@ -428,10 +474,28 @@ export default function Host() {
               </Button>
             )}
             {session.status === 'active' && (
-              <Button onClick={endQuiz} variant="destructive">
-                <Square className="h-4 w-4 mr-2" />
-                End Quiz
-              </Button>
+              <>
+                <Button onClick={pauseQuiz} variant="outline">
+                  <Pause className="h-4 w-4 mr-2" />
+                  Pause
+                </Button>
+                <Button onClick={endQuiz} variant="destructive">
+                  <Square className="h-4 w-4 mr-2" />
+                  End Quiz
+                </Button>
+              </>
+            )}
+            {session.status === 'paused' && (
+              <>
+                <Button onClick={resumeQuiz} className="gradient-primary border-0">
+                  <Play className="h-4 w-4 mr-2" />
+                  Resume
+                </Button>
+                <Button onClick={endQuiz} variant="destructive">
+                  <Square className="h-4 w-4 mr-2" />
+                  End Quiz
+                </Button>
+              </>
             )}
           </div>
         </div>
@@ -500,7 +564,7 @@ export default function Host() {
           </div>
         )}
 
-        {session.status === 'active' && currentQuestion && (
+        {(session.status === 'active' || session.status === 'paused') && currentQuestion && (
           <div className="max-w-4xl mx-auto">
             {/* Timer Display */}
             <div className="mb-6">
