@@ -4,6 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { GripVertical, Trash2 } from 'lucide-react';
 import { QuestionType } from '@/types/quiz';
 
@@ -45,7 +46,7 @@ export function QuestionEditor({
             <GripVertical className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
             <span className="font-bold text-base sm:text-lg text-primary">{index + 1}</span>
           </div>
-          
+
           <div className="flex-1 min-w-0 space-y-4">
             {/* Question text and type - stacked on mobile */}
             <div className="flex flex-col gap-3">
@@ -58,7 +59,7 @@ export function QuestionEditor({
               />
               <Select
                 value={question.question_type}
-                onValueChange={(v) => onUpdate(question.id, { 
+                onValueChange={(v) => onUpdate(question.id, {
                   question_type: v as QuestionType,
                   correct_answers: [],
                   options: v === 'true_false' ? ['True', 'False'] : question.options
@@ -79,17 +80,24 @@ export function QuestionEditor({
             <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
               {question.options.map((option, oIndex) => (
                 <div key={oIndex} className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => onToggleCorrectAnswer(question.id, oIndex)}
-                    className={`w-10 h-10 sm:w-8 sm:h-8 rounded-lg border-2 flex items-center justify-center text-sm font-bold transition-colors shrink-0 ${
-                      question.correct_answers.includes(option) && option
+                  {question.question_type === 'multiple_choice_multiple' ? (
+                    <Checkbox
+                      checked={question.correct_answers.includes(option) && !!option}
+                      onCheckedChange={() => onToggleCorrectAnswer(question.id, oIndex)}
+                      className="w-6 h-6 sm:w-5 sm:h-5 shrink-0"
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => onToggleCorrectAnswer(question.id, oIndex)}
+                      className={`w-10 h-10 sm:w-8 sm:h-8 rounded-lg border-2 flex items-center justify-center text-sm font-bold transition-colors shrink-0 ${question.correct_answers.includes(option) && option
                         ? 'bg-success text-success-foreground border-success'
                         : 'border-border hover:border-primary'
-                    }`}
-                  >
-                    {String.fromCharCode(65 + oIndex)}
-                  </button>
+                        }`}
+                    >
+                      {String.fromCharCode(65 + oIndex)}
+                    </button>
+                  )}
                   <Input
                     placeholder={`Option ${String.fromCharCode(65 + oIndex)}`}
                     value={option}
@@ -105,8 +113,8 @@ export function QuestionEditor({
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 text-sm">
               <div className="flex items-center gap-2">
                 <Label className="text-muted-foreground whitespace-nowrap">Time:</Label>
-                <Select 
-                  value={question.time_limit.toString()} 
+                <Select
+                  value={question.time_limit.toString()}
                   onValueChange={(v) => onUpdate(question.id, { time_limit: parseInt(v) })}
                 >
                   <SelectTrigger className="w-24 h-10 sm:h-8">
@@ -121,8 +129,8 @@ export function QuestionEditor({
               </div>
               <div className="flex items-center gap-2">
                 <Label className="text-muted-foreground whitespace-nowrap">Points:</Label>
-                <Select 
-                  value={question.points.toString()} 
+                <Select
+                  value={question.points.toString()}
                   onValueChange={(v) => onUpdate(question.id, { points: parseInt(v) })}
                 >
                   <SelectTrigger className="w-28 h-10 sm:h-8">

@@ -55,7 +55,7 @@ export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
-  const [quizzes, setQuizzes] = useState<(Quiz & { question_count: number })[]>([]);
+  const [quizzes, setQuizzes] = useState<(Quiz & { question_count: number; last_participant_count?: number })[]>([]);
   const [loading, setLoading] = useState(true);
   const [hostDialogOpen, setHostDialogOpen] = useState(false);
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
@@ -80,13 +80,29 @@ export default function Dashboard() {
 
     if (error) {
       console.error('Error fetching quizzes:', error);
-    } else {
-      const quizzesWithCount = data.map((quiz: any) => ({
-        ...quiz,
-        question_count: quiz.questions?.[0]?.count || 0
-      }));
-      setQuizzes(quizzesWithCount);
+      setLoading(false);
+      return;
     }
+
+    // Fetch latest completion for each quiz to get participant counts
+    const { data: completions } = await supabase
+      .from('quiz_completions')
+      .select('quiz_id, participant_count')
+      .eq('host_id', user!.id)
+      .order('completed_at', { ascending: false });
+    // Create a map of quiz_id to latest participant_count
+    const participantMap = new Map<string, number>();
+    completions?.forEach(c => {
+      if (!participantMap.has(c.quiz_id)) {
+        participantMap.set(c.quiz_id, c.participant_count);
+      }
+    });
+    const quizzesWithCount = data.map((quiz: any) => ({
+      ...quiz,
+      question_count: quiz.questions?.[0]?.count || 0,
+      last_participant_count: participantMap.get(quiz.id)
+    }));
+    setQuizzes(quizzesWithCount);
     setLoading(false);
   };
 
@@ -273,6 +289,15 @@ export default function Dashboard() {
                         <span className="whitespace-nowrap">{quiz.question_count} questions</span>
                         <span className="hidden sm:inline">•</span>
                         <span className="whitespace-nowrap">{quiz.play_count} plays</span>
+                        {quiz.last_participant_count !== undefined && (
+                          <>
+                            <span className='hidden sm:inline'>•</span>
+                            <span className="flex items-center gap-1">
+                              <Users className="h-3 w-3" />
+                              {quiz.last_participant_count} last session
+                            </span>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>

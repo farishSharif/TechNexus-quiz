@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { QuizSession, Quiz, Question, QuizParticipant } from '@/types/quiz';
 import { toast } from 'sonner';
@@ -216,11 +217,18 @@ export default function Play() {
       setSelectedAnswers([option]);
       submitAnswer([option]);
     } else {
-      setSelectedAnswers(prev =>
-        prev.includes(option)
-          ? prev.filter(a => a !== option)
-          : [...prev, option]
-      );
+      // For multiple choice multiple - toggle selection
+      const newAnswers = selectedAnswers.includes(option)
+        ? selectedAnswers.filter(a => a !== option)
+        : [...selectedAnswers, option];
+
+      setSelectedAnswers(newAnswers);
+
+      // Auto-submit when user selects same number of options as correct answers
+      const correctAnswersCount = (currentQuestion.correct_answers as string[]).length;
+      if (newAnswers.length === correctAnswersCount) {
+        submitAnswer(newAnswers);
+      }
     }
   };
 
@@ -500,22 +508,23 @@ export default function Play() {
                       onClick={() => selectAnswer(option)}
                       disabled={hasAnswered}
                     >
-                      <span className="mr-3 font-bold flex-shrink-0">{String.fromCharCode(65 + index)}</span>
-                      <span className="break-words overflow-hidden">{option}</span>
+                      {currentQuestion.question_type === 'multiple_choice_multiple' ? (
+                        <Checkbox
+                          checked={selectedAnswers.includes(option)}
+                          className="mr-3 h-5 w-5 pointer-events-none"
+                        />
+                      ) : (
+                        <span className="mr-3 font-bold flex-shrink-0">{String.fromCharCode(65 + index)}</span>
+                      )}                      <span className="break-words overflow-hidden">{option}</span>
                     </Button>
                   ))}
                 </div>
 
-                {/* Submit Button */}
-                {(currentQuestion.question_type === 'multiple_choice_multiple' || selectedAnswers.length > 0) && (
-                  <Button
-                    onClick={() => submitAnswer()}
-                    disabled={hasAnswered || selectedAnswers.length === 0}
-                    className="w-full mt-6 text-xl h-14 font-black"
-                    size="lg"
-                  >
-                    Submit Answer 🚀
-                  </Button>
+                {/* Hint for multi-select questions */}
+                {currentQuestion.question_type === 'multiple_choice_multiple' && !hasAnswered && (
+                  <p className="text-sm text-muted-foreground text-center mt-4">
+                    Select {(currentQuestion.correct_answers as string[]).length} option{(currentQuestion.correct_answers as string[]).length > 1 ? 's' : ''} to submit
+                  </p>
                 )}
               </>
             )}
