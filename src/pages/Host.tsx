@@ -310,11 +310,12 @@ export default function Host() {
               .eq('id', session.id);
 
             // 3. Move to Next Question after 6 more seconds (Leaderboard Phase)
-            setTimeout(() => {
-              console.log('Auto-advancing to next question');
-              nextQuestion();
-            }, 6000); // 6s viewing time
-          }, 1500); // 1.5s viewing time for answer
+            // REMOVED: Auto-advancing to next question
+            // setTimeout(() => {
+            //   console.log('Auto-advancing to next question');
+            //   nextQuestion();
+            // }, 6000); // 6s viewing time
+          }, 5500); // 5.5s viewing time for answer
 
           return 0;
         }

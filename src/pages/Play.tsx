@@ -319,6 +319,15 @@ export default function Play() {
 
   const currentQuestion = questions[session.current_question_index || 0];
 
+  // Calculate current rank
+  const sortedParticipants = [...participants].sort((a, b) => {
+    if (b.total_score !== a.total_score) {
+      return (b.total_score || 0) - (a.total_score || 0);
+    }
+    return new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime();
+  });
+  const currentRank = sortedParticipants.findIndex(p => p.id === participant.id) + 1;
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -328,8 +337,10 @@ export default function Play() {
             <AvatarDisplay seed={participant.avatar_emoji} size="sm" />
             <span className="font-semibold">{participant.nickname}</span>
           </div>
-          <Badge variant="secondary" className="text-lg px-4">
-            {participant.total_score} pts
+          <Badge variant="secondary" className="text-lg px-4 gap-2">
+            <span>#{currentRank}</span>
+            <span className="opacity-20 text-xs">|</span>
+            <span>{participant.total_score} pts</span>
           </Badge>
         </div>
       </header>
@@ -554,24 +565,53 @@ export default function Play() {
                   Final Standings
                 </h3>
                 <div className="space-y-2">
-                  {participants.slice(0, 10).map((p, index) => (
-                    <div
-                      key={p.id}
-                      className={`flex items-center justify-between p-3 rounded-lg border ${p.id === participant.id ? 'bg-primary/20 border-primary' : 'bg-black/30 border-white/5'
-                        }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="font-bold w-6">
-                          {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <AvatarDisplay seed={p.avatar_emoji} size="sm" />
-                          <span>{p.nickname}</span>
-                        </div>
-                      </div>
-                      <span className="font-bold">{p.total_score}</span>
-                    </div>
-                  ))}
+                  {(() => {
+                    const top10 = sortedParticipants.slice(0, 10);
+                    const userIndex = sortedParticipants.findIndex(p => p.id === participant.id);
+
+                    return (
+                      <>
+                        {top10.map((p, index) => (
+                          <div
+                            key={p.id}
+                            className={`flex items-center justify-between p-3 rounded-lg border transition-all ${p.id === participant.id
+                              ? 'bg-primary text-primary-foreground border-primary'
+                              : 'bg-black/30 border-white/5'
+                              }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="font-bold w-6">
+                                {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <AvatarDisplay seed={p.avatar_emoji} size="sm" />
+                                <span className="truncate max-w-[100px]">{p.nickname}</span>
+                              </div>
+                            </div>
+                            <span className="font-bold">{p.total_score}</span>
+                          </div>
+                        ))}
+
+                        {userIndex >= 10 && (
+                          <>
+                            <div className="border-t border-dashed border-primary/30 my-3" />
+                            <div
+                              className="flex items-center justify-between p-3 rounded-lg border bg-primary text-primary-foreground border-primary"
+                            >
+                              <div className="flex items-center gap-3">
+                                <span className="font-bold w-6">{userIndex + 1}.</span>
+                                <div className="flex items-center gap-2">
+                                  <AvatarDisplay seed={participant.avatar_emoji} size="sm" />
+                                  <span className="truncate max-w-[100px]">{participant.nickname}</span>
+                                </div>
+                              </div>
+                              <span className="font-bold">{participant.total_score}</span>
+                            </div>
+                          </>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </CardContent>
             </Card>
