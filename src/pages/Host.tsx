@@ -230,7 +230,8 @@ export default function Host() {
       .eq('id', session.id);
 
     if (error) {
-      toast.error('Failed to start quiz');
+      console.error('Error starting quiz:', error);
+      toast.error(`Failed to start quiz: ${error.message}`);
     } else {
       const initialQuestion = questions[0];
       setSession({ ...session, status: 'active', current_question_index: 0 });
@@ -274,6 +275,37 @@ export default function Host() {
   };
 
 
+  const handleTimeUp = async () => {
+    if (!session) return;
+
+    // 1. Show answer locally on Host (Eye icon style reveal)
+    setShowAnswer(true);
+
+    // 2. Show Leaderboard after 5.5 seconds (Answer Reveal Phase)
+    setTimeout(async () => {
+      // Check if this is the last question
+      const isLastQuestion = (session.current_question_index || 0) >= questions.length - 1;
+
+      if (isLastQuestion) {
+        // If last question, skip leaderboard intermission and go straight to end
+        console.log('Last question completed, skipping leaderboard, ending quiz...');
+        nextQuestion(); // This will trigger endQuiz logic
+        return;
+      }
+
+      console.log('Auto-showing leaderboard');
+      setIsLeaderboardView(true);
+
+      // Sync with players for leaderboard phase
+      await supabase
+        .from('quiz_sessions')
+        .update({
+          show_leaderboard: true
+        })
+        .eq('id', session.id);
+    }, 5500); // 5.5s viewing time for answer
+  };
+
   // Timer effect for auto-advancing questions
   useEffect(() => {
     if (session?.status !== 'active' || timeLeft <= 0) return;
@@ -283,40 +315,7 @@ export default function Host() {
         if (prev <= 1) {
           // Time's up sequence
           clearInterval(timer);
-          console.log('Timer ended, starting auto-sequence');
-
-          // 1. Show Answer immediately
-          setShowAnswer(true);
-
-          // 2. Show Leaderboard after 3 seconds (Answer Reveal Phase)
-          setTimeout(async () => {
-            // Check if this is the last question
-            const isLastQuestion = (session.current_question_index || 0) >= questions.length - 1;
-
-            if (isLastQuestion) {
-              // If last question, skip leaderboard intermission and go straight to end
-              console.log('Last question completed, skipping leaderboard, ending quiz...');
-              nextQuestion(); // This will trigger endQuiz logic
-              return;
-            }
-
-            console.log('Auto-showing leaderboard');
-            setIsLeaderboardView(true);
-
-            // Sync with players
-            await supabase
-              .from('quiz_sessions')
-              .update({ show_leaderboard: true })
-              .eq('id', session.id);
-
-            // 3. Move to Next Question after 6 more seconds (Leaderboard Phase)
-            // REMOVED: Auto-advancing to next question
-            // setTimeout(() => {
-            //   console.log('Auto-advancing to next question');
-            //   nextQuestion();
-            // }, 6000); // 6s viewing time
-          }, 5500); // 5.5s viewing time for answer
-
+          handleTimeUp();
           return 0;
         }
         return prev - 1;
@@ -358,7 +357,8 @@ export default function Host() {
       .from('quiz_sessions')
       .update({
         status: 'completed',
-        ended_at: new Date().toISOString()
+        ended_at: new Date().toISOString(),
+        show_leaderboard: false
       })
       .eq('id', session.id);
 
@@ -419,6 +419,14 @@ export default function Host() {
       if (insertError) {
         console.error('Failed to save leaderboard:', insertError);
       }
+
+      // 4. Reveal final leaderboard to players after podium animation (approx 4.5s)
+      setTimeout(async () => {
+        await supabase
+          .from('quiz_sessions')
+          .update({ show_leaderboard: true })
+          .eq('id', session.id);
+      }, 4500);
     }
   };
 

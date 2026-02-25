@@ -68,7 +68,7 @@ export default function Play() {
 
   // Timer effect - only runs when timeLeft is set and not answered
   useEffect(() => {
-    if (session?.status !== 'active' || hasAnswered || timeLeft === null || timeLeft <= 0) return;
+    if (session?.status !== 'active' || timeLeft === 0 || timeLeft === null) return;
 
     const timer = setInterval(() => {
       setTimeLeft(prev => {
@@ -405,136 +405,159 @@ export default function Play() {
               </CardContent>
             </Card>
 
-            {/* Show leaderboard after answering - no correct/wrong feedback */}
-            {hasAnswered ? (
+            {/* Show leaderboard or reveal state */}
+            {session.show_leaderboard ? (
               <div className="space-y-4">
-                {session?.show_leaderboard ? (
-                  /* Live Leaderboard - Only shown when Host enables it */
-                  <Card className="mb-6 bg-card dark:bg-black/40 border-border dark:border-white/10 backdrop-blur-md animate-in fade-in slide-in-from-bottom duration-700">
-                    <CardContent className="py-4">
-                      <h3 className="font-display font-bold mb-2 flex items-center gap-2">
-                        <Trophy className="h-5 w-5 text-secondary" />
-                        Leaderboard
-                      </h3>
-                      <div className="space-y-2">
-                        {(() => {
-                          // Sort participants by score descending, then by joined_at ascending as tie-breaker
-                          const sorted = [...participants].sort((a, b) => {
-                            if (b.total_score !== a.total_score) {
-                              return (b.total_score || 0) - (a.total_score || 0);
-                            }
-                            return new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime();
-                          });
-                          // Find current user's rank (1-based)
-                          const userIndex = sorted.findIndex(p => p.id === participant.id);
-                          // Top 10
-                          const top10 = sorted.slice(0, 10);
-                          // If user not in top 10, show their row after a separator
-                          return (
-                            <>
-                              {top10.map((p, index) => (
+                {/* Live Leaderboard - Only shown when Host enables it */}
+                <Card className="mb-6 bg-card dark:bg-black/40 border-border dark:border-white/10 backdrop-blur-md animate-in fade-in slide-in-from-bottom duration-700">
+                  <CardContent className="py-4">
+                    <h3 className="font-display font-bold mb-2 flex items-center gap-2">
+                      <Trophy className="h-5 w-5 text-secondary" />
+                      Leaderboard
+                    </h3>
+                    <div className="space-y-2">
+                      {(() => {
+                        // Sort participants by score descending, then by joined_at ascending as tie-breaker
+                        const sorted = [...participants].sort((a, b) => {
+                          if (b.total_score !== a.total_score) {
+                            return (b.total_score || 0) - (a.total_score || 0);
+                          }
+                          return new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime();
+                        });
+                        // Find current user's rank (1-based)
+                        const userIndex = sorted.findIndex(p => p.id === participant.id);
+                        // Top 10
+                        const top10 = sorted.slice(0, 10);
+                        // If user not in top 10, show their row after a separator
+                        return (
+                          <>
+                            {top10.map((p, index) => (
+                              <div
+                                key={p.id}
+                                className={`flex items-center justify-between p-4 rounded-xl border-b-4 transition-all hover:scale-[1.02] ${p.id === participant.id
+                                  ? 'bg-primary text-primary-foreground border-primary-foreground/20'
+                                  : index === 0
+                                    ? 'bg-yellow-100 text-yellow-900 border-yellow-300'
+                                    : index === 1
+                                      ? 'bg-slate-100 text-slate-900 border-slate-300'
+                                      : index === 2
+                                        ? 'bg-orange-100 text-orange-900 border-orange-300'
+                                        : 'bg-card border-border hover:border-primary/30'
+                                  }`}
+                              >
+                                <div className="flex items-center gap-4">
+                                  <div className={`flex items-center justify-center w-10 h-10 rounded-full font-black text-lg ${index === 0 ? 'bg-yellow-400 text-yellow-900' :
+                                    index === 1 ? 'bg-slate-300 text-slate-800' :
+                                      index === 2 ? 'bg-orange-300 text-orange-900' :
+                                        'bg-background/20'
+                                    }`}>
+                                    {index + 1}
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="font-bold text-lg leading-none">{p.nickname}</span>
+                                    <div className="mt-1"><AvatarDisplay seed={p.avatar_emoji} size="sm" /></div>
+                                  </div>
+                                </div>
+                                <span className="font-black text-2xl">{p.total_score}</span>
+                              </div>
+                            ))}
+                            {userIndex >= 10 && (
+                              <>
+                                <div className="border-t-2 border-dashed border-border my-4" />
                                 <div
-                                  key={p.id}
-                                  className={`flex items-center justify-between p-4 rounded-xl border-b-4 transition-all hover:scale-[1.02] ${p.id === participant.id
-                                    ? 'bg-primary text-primary-foreground border-primary-foreground/20'
-                                    : index === 0
-                                      ? 'bg-yellow-100 text-yellow-900 border-yellow-300'
-                                      : index === 1
-                                        ? 'bg-slate-100 text-slate-900 border-slate-300'
-                                        : index === 2
-                                          ? 'bg-orange-100 text-orange-900 border-orange-300'
-                                          : 'bg-card border-border hover:border-primary/30'
-                                    }`}
+                                  className="flex items-center justify-between p-4 rounded-xl border-b-4 bg-primary text-primary-foreground border-primary-foreground/20"
                                 >
                                   <div className="flex items-center gap-4">
-                                    <div className={`flex items-center justify-center w-10 h-10 rounded-full font-black text-lg ${index === 0 ? 'bg-yellow-400 text-yellow-900' :
-                                      index === 1 ? 'bg-slate-300 text-slate-800' :
-                                        index === 2 ? 'bg-orange-300 text-orange-900' :
-                                          'bg-background/20'
-                                      }`}>
-                                      {index + 1}
+                                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-white/20 font-black text-lg">
+                                      {userIndex + 1}
                                     </div>
                                     <div className="flex flex-col">
-                                      <span className="font-bold text-lg leading-none">{p.nickname}</span>
-                                      <div className="mt-1"><AvatarDisplay seed={p.avatar_emoji} size="sm" /></div>
+                                      <span className="font-bold text-lg leading-none">{participant.nickname}</span>
+                                      <div className="mt-1"><AvatarDisplay seed={participant.avatar_emoji} size="sm" /></div>
                                     </div>
                                   </div>
-                                  <span className="font-black text-2xl">{p.total_score}</span>
+                                  <span className="font-black text-2xl">{participant.total_score}</span>
                                 </div>
-                              ))}
-                              {userIndex >= 10 && (
-                                <>
-                                  <div className="border-t-2 border-dashed border-border my-4" />
-                                  <div
-                                    className="flex items-center justify-between p-4 rounded-xl border-b-4 bg-primary text-primary-foreground border-primary-foreground/20"
-                                  >
-                                    <div className="flex items-center gap-4">
-                                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-white/20 font-black text-lg">
-                                        {userIndex + 1}
-                                      </div>
-                                      <div className="flex flex-col">
-                                        <span className="font-bold text-lg leading-none">{participant.nickname}</span>
-                                        <div className="mt-1"><AvatarDisplay seed={participant.avatar_emoji} size="sm" /></div>
-                                      </div>
-                                    </div>
-                                    <span className="font-black text-2xl">{participant.total_score}</span>
-                                  </div>
-                                </>
-                              )}
-                            </>
-                          );
-                        })()}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  /* Answer Submitted Card - No feedback shown */
-                  /* Answer Submitted Card */
-                  <Card className="border-4 border-primary/20 bg-primary/5 overflow-hidden relative">
-                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
-                    <CardContent className="py-12 text-center relative z-10">
-                      <div className="mb-6 inline-block p-4 rounded-full bg-primary/10 animate-pulse">
-                        <Loader2 className="h-12 w-12 text-primary animate-spin" />
-                      </div>
-                      <h3 className="font-display text-3xl font-black mb-2 text-primary">
-                        {(timeLeft === 0) ? "Time's Up! ⏰" : 'Answer Locked In! 🔒'}
-                      </h3>
-                      <p className="text-xl text-muted-foreground font-medium">
-                        {(timeLeft === 0) ? 'Revealing scores...' : 'Waiting for other players...'}
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
+                              </>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             ) : (
               <>
-                {/* Answer Options */}
+                {/* Answer Options Phase */}
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {(currentQuestion.options as string[]).map((option, index) => (
-                    <Button
-                      key={`${session.current_question_index}-${index}`}
-                      variant={selectedAnswers.includes(option) ? 'default' : 'outline'}
-                      className={`h-auto min-h-[5rem] py-4 px-6 text-left justify-start text-lg sm:text-xl font-bold break-words whitespace-normal overflow-hidden rounded-2xl border-b-4 active:border-b-0 active:translate-y-1 transition-all ${selectedAnswers.includes(option) ? 'bg-primary text-primary-foreground border-primary-foreground/20' : 'hover:border-primary/50'
-                        }`}
-                      onClick={() => selectAnswer(option)}
-                      disabled={hasAnswered}
-                    >
-                      {currentQuestion.question_type === 'multiple_choice_multiple' ? (
-                        <Checkbox
-                          checked={selectedAnswers.includes(option)}
-                          className="mr-3 h-5 w-5 pointer-events-none"
-                        />
-                      ) : (
-                        <span className="mr-3 font-bold flex-shrink-0">{String.fromCharCode(65 + index)}</span>
-                      )}                      <span className="break-words overflow-hidden">{option}</span>
-                    </Button>
-                  ))}
+                  {(currentQuestion.options as string[]).map((option, index) => {
+                    const isSelected = selectedAnswers.includes(option);
+                    const isCorrect = (currentQuestion.correct_answers as string[]).includes(option);
+                    const isRevealing = timeLeft === 0 && !session.show_leaderboard;
+
+                    let variant: "default" | "outline" | "success" | "destructive" = isSelected ? "default" : "outline";
+                    let customStyles = "";
+
+                    if (isRevealing) {
+                      if (isCorrect) {
+                        customStyles = "bg-green-500 text-white border-green-700 hover:bg-green-500 scale-[1.05] z-10 shadow-lg ring-4 ring-green-500/40 opacity-100 disabled:opacity-100";
+                      } else if (isSelected && !isCorrect) {
+                        customStyles = "bg-red-500 text-white border-red-700 hover:bg-red-500 scale-[1.02] opacity-100 disabled:opacity-100";
+                      } else {
+                        customStyles = "opacity-30 grayscale-[0.5]";
+                      }
+                    } else if (hasAnswered) {
+                      if (isSelected) {
+                        customStyles = "bg-primary text-primary-foreground border-primary-foreground/20 ring-4 ring-primary/20 scale-[1.02] disabled:opacity-100";
+                      } else {
+                        customStyles = "opacity-40";
+                      }
+                    } else {
+                      customStyles = "hover:border-primary/50 hover:scale-[1.02]";
+                    }
+
+                    return (
+                      <Button
+                        key={`${session.current_question_index}-${index}`}
+                        variant={variant as any}
+                        className={`h-auto min-h-[5rem] py-4 px-6 text-left justify-start text-lg sm:text-xl font-bold break-words whitespace-normal overflow-hidden rounded-2xl border-b-4 active:border-b-0 active:translate-y-1 transition-all ${customStyles}`}
+                        onClick={() => selectAnswer(option)}
+                        disabled={hasAnswered || isRevealing}
+                      >
+                        {currentQuestion.question_type === 'multiple_choice_multiple' ? (
+                          <Checkbox
+                            checked={isSelected}
+                            className={`mr-3 h-5 w-5 pointer-events-none ${isRevealing && isCorrect ? 'border-white' : ''}`}
+                          />
+                        ) : (
+                          <span className={`mr-3 font-bold flex-shrink-0 ${isRevealing && isCorrect ? 'text-white' : ''}`}>
+                            {String.fromCharCode(65 + index)}
+                          </span>
+                        )}
+                        <span className="break-words overflow-hidden">{option}</span>
+                        {isRevealing && isCorrect && (
+                          <span className="ml-auto text-2xl animate-bounce-in"></span>
+                        )}
+                        {isRevealing && isSelected && !isCorrect && (
+                          <span className="ml-auto text-2xl animate-bounce-in"></span>
+                        )}
+                      </Button>
+                    );
+                  })}
                 </div>
 
                 {/* Hint for multi-select questions */}
-                {currentQuestion.question_type === 'multiple_choice_multiple' && !hasAnswered && (
+                {currentQuestion.question_type === 'multiple_choice_multiple' && !hasAnswered && (timeLeft !== 0 && !session.show_leaderboard) && (
                   <p className="text-sm text-muted-foreground text-center mt-4">
                     Select {(currentQuestion.correct_answers as string[]).length} option{(currentQuestion.correct_answers as string[]).length > 1 ? 's' : ''} to submit
+                  </p>
+                )}
+
+                {hasAnswered && (timeLeft !== 0 && !session.show_leaderboard) && (
+                  <p className="text-center mt-6 font-bold text-primary animate-pulse flex items-center justify-center gap-2">
+                    <Clock className="h-5 w-5" />
+                    Answer Locked! Waiting for result...
                   </p>
                 )}
               </>
@@ -542,79 +565,109 @@ export default function Play() {
           </div>
         )}
 
-        {/* Completed */}
         {session.status === 'completed' && (
           <div className="max-w-md mx-auto text-center py-10">
-            <div className="text-6xl mb-4">🎉</div>
-            <h2 className="font-display text-3xl font-bold mb-2">Quiz Complete!</h2>
-            <p className="text-muted-foreground mb-6">Great job playing!</p>
+            {!session.show_leaderboard ? (
+              <div className="flex flex-col items-center justify-center py-20 animate-in fade-in duration-1000">
+                <div className="relative mb-8">
+                  <div className="text-8xl animate-bounce">🏆</div>
+                  <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center">
+                    <Loader2 className="h-20 w-20 animate-spin text-primary opacity-20" />
+                  </div>
+                </div>
+                <h2 className="font-display text-4xl font-black mb-4 gradient-text">Calculating Results...</h2>
+                <p className="text-xl font-bold text-muted-foreground animate-pulse">Waiting for the final podium reveal!</p>
 
-            <Card className="mb-6 bg-card/40 backdrop-blur-md border-primary/20">
-              <CardContent className="py-6">
-                <p className="text-muted-foreground mb-2">Your Score</p>
-                <p className="font-display text-6xl font-black text-primary animate-pulse">
-                  {participant.total_score}
-                </p>
-              </CardContent>
-            </Card>
+                <Card className="mt-12 bg-primary/10 border-primary/20 backdrop-blur-md w-full">
+                  <CardContent className="py-8">
+                    <p className="text-muted-foreground mb-2 font-bold uppercase tracking-widest text-sm">Your Final Score</p>
+                    <p className="text-6xl font-black text-primary">{participant.total_score}</p>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              <div className="animate-in zoom-in fade-in duration-1000">
+                <div className="text-6xl mb-4 animate-tada">🎉</div>
+                <h2 className="font-display text-4xl font-black mb-2 gradient-text">Quiz Complete!</h2>
+                <p className="text-muted-foreground mb-6 font-bold text-lg">Check out the final standings!</p>
 
-            <Card className="bg-card/40 backdrop-blur-md border-primary/20">
-              <CardContent className="py-6">
-                <h3 className="font-display font-bold mb-4 flex items-center justify-center gap-2">
-                  <Trophy className="h-5 w-5 text-secondary" />
-                  Final Standings
-                </h3>
-                <div className="space-y-2">
-                  {(() => {
-                    const top10 = sortedParticipants.slice(0, 10);
-                    const userIndex = sortedParticipants.findIndex(p => p.id === participant.id);
+                <Card className="mb-6 bg-card dark:bg-black/40 backdrop-blur-md border-primary/20 shadow-2xl relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 via-primary to-yellow-400"></div>
+                  <CardContent className="py-8">
+                    <p className="text-muted-foreground mb-2 font-bold uppercase tracking-widest text-sm text-center">Your Final Score</p>
+                    <p className="font-display text-7xl font-black text-primary text-center">
+                      {participant.total_score}
+                    </p>
+                  </CardContent>
+                </Card>
 
-                    return (
-                      <>
-                        {top10.map((p, index) => (
-                          <div
-                            key={p.id}
-                            className={`flex items-center justify-between p-3 rounded-lg border transition-all ${p.id === participant.id
-                              ? 'bg-primary text-primary-foreground border-primary'
-                              : 'bg-black/30 border-white/5'
-                              }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <span className="font-bold w-6">
-                                {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`}
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <AvatarDisplay seed={p.avatar_emoji} size="sm" />
-                                <span className="truncate max-w-[100px]">{p.nickname}</span>
-                              </div>
-                            </div>
-                            <span className="font-bold">{p.total_score}</span>
-                          </div>
-                        ))}
+                <Card className="bg-card dark:bg-black/40 backdrop-blur-md border-primary/20 shadow-xl overflow-hidden mb-20">
+                  <div className="bg-muted/50 py-3 border-b">
+                    <h3 className="font-display font-bold flex items-center justify-center gap-2">
+                      <Trophy className="h-5 w-5 text-yellow-500" />
+                      Final Standings
+                    </h3>
+                  </div>
+                  <div className="max-h-[400px] overflow-y-auto p-4 space-y-2">
+                    {(() => {
+                      const top10 = sortedParticipants.slice(0, 10);
+                      const userIndex = sortedParticipants.findIndex(p => p.id === participant.id);
 
-                        {userIndex >= 10 && (
-                          <>
-                            <div className="border-t border-dashed border-primary/30 my-3" />
+                      return (
+                        <>
+                          {top10.map((p, index) => (
                             <div
-                              className="flex items-center justify-between p-3 rounded-lg border bg-primary text-primary-foreground border-primary"
+                              key={p.id}
+                              className={`flex items-center justify-between p-4 rounded-xl border-b-4 transition-all ${p.id === participant.id
+                                ? 'bg-primary text-primary-foreground border-primary'
+                                : 'bg-card border-border'
+                                }`}
                             >
-                              <div className="flex items-center gap-3">
-                                <span className="font-bold w-6">{userIndex + 1}.</span>
-                                <div className="flex items-center gap-2">
-                                  <AvatarDisplay seed={participant.avatar_emoji} size="sm" />
-                                  <span className="truncate max-w-[100px]">{participant.nickname}</span>
+                              <div className="flex items-center gap-4">
+                                <div className={`flex items-center justify-center w-10 h-10 rounded-full font-black text-lg ${index === 0 ? 'bg-yellow-400 text-yellow-900' :
+                                  index === 1 ? 'bg-slate-300 text-slate-800' :
+                                    index === 2 ? 'bg-orange-300 text-orange-900' :
+                                      'bg-muted'
+                                  }`}>
+                                  {index === 0 ? '1' : index === 1 ? '2' : index === 2 ? '3' : index + 1}
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <AvatarDisplay seed={p.avatar_emoji} size="md" />
+                                  <span className="font-bold text-lg">{p.nickname}</span>
                                 </div>
                               </div>
-                              <span className="font-bold">{participant.total_score}</span>
+                              <span className="font-black text-xl">{p.total_score}</span>
                             </div>
-                          </>
-                        )}
-                      </>
-                    );
-                  })()}
-                </div>
-              </CardContent>
-            </Card>
+                          ))}
+
+                          {userIndex >= 0 && (
+                            <div className="sticky bottom-0 left-0 right-0 z-10 -mx-4 -mb-4 mt-6">
+                              <div className="bg-primary p-4 text-primary-foreground shadow-2xl">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-white/20 font-black">
+                                      {userIndex + 1}
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <span className="text-[10px] uppercase font-black opacity-70">Your Ranking</span>
+                                      <div className="flex items-center gap-2">
+                                        <AvatarDisplay seed={participant.avatar_emoji} size="sm" />
+                                        <span className="font-bold">{participant.nickname}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <span className="font-black text-2xl">{participant.total_score}</span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
+                </Card>
+              </div>
+            )}
           </div>
         )}
       </div>
