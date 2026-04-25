@@ -71,14 +71,27 @@ export default function Join() {
     setIsLoading(true);
     const cleanPin = pinCode.replace(/\s/g, '');
 
+    // Fetch session with max_participants so we can check capacity
     const { data: session } = await supabase
       .from('quiz_sessions')
-      .select('id')
+      .select('id, max_participants')
       .eq('pin_code', cleanPin)
       .single();
 
     if (!session) {
       toast.error('Session not found');
+      setIsLoading(false);
+      return;
+    }
+
+    // Pre-flight capacity check — gives a friendly error before hitting the RLS policy
+    const { count } = await supabase
+      .from('quiz_participants')
+      .select('id', { count: 'exact', head: true })
+      .eq('session_id', session.id);
+
+    if (count !== null && count >= session.max_participants) {
+      toast.error(`This session is full! (Max ${session.max_participants} players)`);
       setIsLoading(false);
       return;
     }
@@ -94,7 +107,12 @@ export default function Join() {
       .single();
 
     if (error) {
-      toast.error('Failed to join quiz');
+      // Distinguish a capacity-enforcement RLS rejection from a generic error
+      if (error.code === '42501' || error.message?.toLowerCase().includes('policy')) {
+        toast.error(`Session is full! Max ${session.max_participants} players allowed.`);
+      } else {
+        toast.error('Failed to join quiz. Please try again.');
+      }
     } else {
       localStorage.setItem('participantId', participant.id);
       navigate(`/play/${session.id}`);

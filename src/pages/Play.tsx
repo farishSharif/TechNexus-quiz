@@ -41,6 +41,7 @@ export default function Play() {
         subscribeToSession();
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId, participantId]);
 
   const checkSessionAndRedirect = async () => {
@@ -86,6 +87,7 @@ export default function Play() {
     if (timeLeft === 0 && !hasAnswered && !isSubmitting) {
       handleTimeUp();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft, hasAnswered, isSubmitting]);
 
   // Initialize timer when session becomes active or question changes
@@ -182,17 +184,29 @@ export default function Play() {
           table: 'quiz_participants',
           filter: `session_id=eq.${sessionId}`
         },
-        () => {
-          // Refresh participants
-          supabase
-            .from('quiz_participants')
-            .select('*')
-            .eq('session_id', sessionId)
-            .order('total_score', { ascending: false })
-            .order('joined_at', { ascending: true })
-            .then(({ data }) => {
-              if (data) setParticipants(data as QuizParticipant[]);
-            });
+        (payload) => {
+          // Surgically update only the changed participant in local state
+          // instead of re-fetching ALL participants on every event.
+          // This prevents an O(N²) query storm when N players all answer simultaneously.
+          if (payload.eventType === 'INSERT') {
+            setParticipants(prev =>
+              [...prev, payload.new as QuizParticipant].sort((a, b) => {
+                if (b.total_score !== a.total_score) return b.total_score - a.total_score;
+                return new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime();
+              })
+            );
+          } else if (payload.eventType === 'UPDATE') {
+            setParticipants(prev =>
+              prev
+                .map(p => p.id === payload.new.id ? payload.new as QuizParticipant : p)
+                .sort((a, b) => {
+                  if (b.total_score !== a.total_score) return b.total_score - a.total_score;
+                  return new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime();
+                })
+            );
+          } else if (payload.eventType === 'DELETE') {
+            setParticipants(prev => prev.filter(p => p.id !== payload.old.id));
+          }
         }
       )
       .subscribe();
@@ -496,7 +510,7 @@ export default function Play() {
                     const isCorrect = (currentQuestion.correct_answers as string[]).includes(option);
                     const isRevealing = timeLeft === 0 && !session.show_leaderboard;
 
-                    let variant: "default" | "outline" | "success" | "destructive" = isSelected ? "default" : "outline";
+                    const variant: "default" | "outline" | "success" | "destructive" = isSelected ? "default" : "outline";
                     let customStyles = "";
 
                     if (isRevealing) {
@@ -520,7 +534,7 @@ export default function Play() {
                     return (
                       <Button
                         key={`${session.current_question_index}-${index}`}
-                        variant={variant as any}
+                        variant={variant as "default" | "outline" | "success" | "destructive"}
                         className={`h-auto min-h-[5rem] py-4 px-6 text-left justify-start text-lg sm:text-xl font-bold break-words whitespace-normal overflow-hidden rounded-2xl border-b-4 active:border-b-0 active:translate-y-1 transition-all ${customStyles}`}
                         onClick={() => selectAnswer(option)}
                         disabled={hasAnswered || isRevealing}

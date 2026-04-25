@@ -233,6 +233,7 @@ export type Database = {
           ended_at: string | null
           host_id: string
           id: string
+          max_participants: number
           mode: Database["public"]["Enums"]["session_mode"]
           pin_code: string
           quiz_id: string
@@ -246,6 +247,7 @@ export type Database = {
           ended_at?: string | null
           host_id: string
           id?: string
+          max_participants?: number
           mode?: Database["public"]["Enums"]["session_mode"]
           pin_code: string
           quiz_id: string
@@ -259,6 +261,7 @@ export type Database = {
           ended_at?: string | null
           host_id?: string
           id?: string
+          max_participants?: number
           mode?: Database["public"]["Enums"]["session_mode"]
           pin_code?: string
           quiz_id?: string

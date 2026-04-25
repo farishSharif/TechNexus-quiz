@@ -56,6 +56,7 @@ export interface QuizSession {
   status: SessionStatus;
   current_question_index: number;
   show_leaderboard: boolean;
+  max_participants: number;
   started_at: string | null;
   ended_at: string | null;
   created_at: string;
